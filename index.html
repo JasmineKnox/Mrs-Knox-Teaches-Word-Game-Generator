@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mrs Knox Teaches Word Game Generator</title>
   <style>
-    body{font-family:Arial,sans-serif;max-width:980px;margin:0 auto;padding:24px;line-height:1.4;background:#f7f7f7;color:#222}
+    body{font-family:Arial,sans-serif;max-width:1050px;margin:0 auto;padding:24px;line-height:1.4;background:#f7f7f7;color:#222}
     h1{margin-bottom:4px}.sub{margin-top:0;color:#555}.panel{background:#fff;border:1px solid #bbb;padding:16px;margin:16px 0;border-radius:8px}
     label{font-weight:700;display:block;margin-top:12px}select,textarea,button,input{font:inherit;padding:10px;margin-top:6px}select,textarea{width:100%;box-sizing:border-box}
     .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
     button{cursor:pointer;border:1px solid #777;background:#eee;border-radius:6px}button.primary{background:#222;color:#fff}
-    #prompt{font-size:1.6rem;font-weight:700;padding:20px;border:2px solid #222;background:#fff;min-height:80px}
+    #prompt{font-size:1.45rem;font-weight:700;padding:20px;border:2px solid #222;background:#fff;min-height:80px;white-space:pre-wrap}
+    #targetPanel{padding:16px;border:2px dashed #555;margin:14px 0;background:#fffbe8}
+    #targetWord{font-size:2rem;font-weight:800;margin-top:4px;word-break:break-word}
     #details{white-space:pre-wrap;background:#fafafa;border:1px solid #ddd;padding:14px;margin-top:12px}
-    .hidden{display:none}.tag{display:inline-block;padding:3px 8px;border:1px solid #aaa;border-radius:20px;margin-right:6px;font-size:.9rem}
+    .hidden{display:none!important}.tag{display:inline-block;padding:3px 8px;border:1px solid #aaa;border-radius:20px;margin-right:6px;font-size:.9rem}
+    .small{font-size:.9rem;color:#555;margin-top:6px}.status{font-size:.9rem;color:#333;margin-top:6px}
     @media(max-width:700px){.row{grid-template-columns:1fr}}
   </style>
 </head>
@@ -51,13 +54,15 @@
 
     <div id="customWrap" class="hidden">
       <label for="customWords">Custom word bank</label>
-      <textarea id="customWords" rows="4" placeholder="Paste words or terms, separated by commas or new lines"></textarea>
+      <textarea id="customWords" rows="7" placeholder="Paste words or terms, separated by commas, semicolons or new lines"></textarea>
+      <div id="bankStatus" class="status"></div>
     </div>
 
     <div class="controls">
       <button id="generate" class="primary">Generate round</button>
       <button id="surprise">Surprise me</button>
       <button id="copy">Copy prompt</button>
+      <button id="toggleTarget">Hide target from guesser</button>
       <button id="reveal">Reveal / extra detail</button>
     </div>
   </div>
@@ -68,6 +73,13 @@
       <span class="tag" id="difficultyTag"></span>
       <span class="tag" id="focusTag"></span>
     </div>
+
+    <div id="targetPanel">
+      <strong id="targetLabel">Teacher / class target</strong>
+      <div id="targetWord">—</div>
+      <div class="small">For Mystery Word, let the class see this while the guesser is turned away, then hide it before they turn back.</div>
+    </div>
+
     <h2>Classroom prompt</h2>
     <div id="prompt">Choose options and generate a round.</div>
     <div id="details" class="hidden"></div>
@@ -76,11 +88,11 @@
   <div class="panel">
     <h2>Prototype test checklist</h2>
     <ul>
-      <li>Does each game generate a usable classroom prompt?</li>
+      <li>Does the custom bank count the terms you pasted?</li>
+      <li>Does Generate round pick an actual target from that bank?</li>
+      <li>For Mystery Word, can the class see the target and then hide it from the guesser?</li>
       <li>Does Easy / Medium / Hard meaningfully change the English thinking?</li>
-      <li>Are the built-in word banks useful enough?</li>
-      <li>Does a pasted custom word bank work?</li>
-      <li>Which games need extra controls before we style it?</li>
+      <li>Which games need different controls before we style it?</li>
     </ul>
   </div>
 
@@ -128,9 +140,9 @@ const plainSentences = [
 ];
 
 const storyConstraints = {
- easy:['Build any coherent classroom-safe story.'],
- medium:['Mystery genre','Past tense','Set in a school','Use at least one adverb','Set in space','Include a storm'],
- hard:['Create a tense tone','Use first-person perspective','Build towards a twist','Include a recurring symbol','Create a hopeful tone','Use deliberately short sentences']
+  easy:['Build any coherent classroom-safe story.'],
+  medium:['Mystery genre','Past tense','Set in a school','Use at least one adverb','Set in space','Include a storm'],
+  hard:['Create a tense tone','Use first-person perspective','Build towards a twist','Include a recurring symbol','Create a hopeful tone','Use deliberately short sentences']
 };
 
 const gameSelect=document.getElementById('game');
@@ -140,104 +152,181 @@ const $=id=>document.getElementById(id);
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const sample=(a,n)=>[...a].sort(()=>Math.random()-.5).slice(0,n);
 const labels={easy:'Easy',medium:'Medium',hard:'Hard'};
+let currentTarget='';
+let targetHidden=false;
 
-$('focus').addEventListener('change',()=>$('customWrap').classList.toggle('hidden',$('focus').value!=='custom'));
+function parseCustomBank(){
+  return $('customWords').value
+    .split(/[\n,;]+/)
+    .map(s=>s.trim())
+    .filter(Boolean);
+}
+
+function getBank(){
+  if($('focus').value==='custom') return parseCustomBank();
+  return banks[$('focus').value]||banks.general;
+}
+
+function getCategories(){
+  if($('focus').value==='custom') return ['your current text / unit'];
+  return categoryPools[$('focus').value]||categoryPools.general;
+}
+
+function lettersFor(word){return word.replace(/[^a-z]/gi,'').toLowerCase();}
+
+function updateBankStatus(){
+  if($('focus').value!=='custom') return;
+  const n=parseCustomBank().length;
+  $('bankStatus').textContent=n ? `${n} terms loaded.` : 'No terms loaded yet.';
+}
+
+function setTarget(word,label='Teacher / class target'){
+  currentTarget=word||'';
+  $('targetLabel').textContent=label;
+  targetHidden=false;
+  $('targetWord').textContent=currentTarget||'—';
+  $('toggleTarget').textContent='Hide target from guesser';
+}
+
+function toggleTarget(){
+  if(!currentTarget) return;
+  targetHidden=!targetHidden;
+  $('targetWord').textContent=targetHidden?'TARGET HIDDEN':currentTarget;
+  $('toggleTarget').textContent=targetHidden?'Show target':'Hide target from guesser';
+}
+
+$('focus').addEventListener('change',()=>{
+  $('customWrap').classList.toggle('hidden',$('focus').value!=='custom');
+  updateBankStatus();
+});
+$('customWords').addEventListener('input',updateBankStatus);
 $('generate').addEventListener('click',generate);
+$('toggleTarget').addEventListener('click',toggleTarget);
 $('surprise').addEventListener('click',()=>{
   $('game').selectedIndex=Math.floor(Math.random()*games.length);
   $('difficulty').selectedIndex=Math.floor(Math.random()*3);
-  if($('focus').value==='custom' && !getBank().length) $('focus').value='general';
+  if($('focus').value==='custom' && !getBank().length){
+    $('focus').value='general';
+    $('customWrap').classList.add('hidden');
+  }
   generate();
 });
-$('copy').addEventListener('click',async()=>{await navigator.clipboard.writeText($('prompt').innerText);$('copy').textContent='Copied!';setTimeout(()=>$('copy').textContent='Copy prompt',1000)});
+$('copy').addEventListener('click',async()=>{
+  const text=(currentTarget?`Target: ${currentTarget}\n\n`:'')+$('prompt').innerText;
+  await navigator.clipboard.writeText(text);
+  $('copy').textContent='Copied!';
+  setTimeout(()=>$('copy').textContent='Copy prompt',1000);
+});
 $('reveal').addEventListener('click',()=>$('details').classList.toggle('hidden'));
-
-function getBank(){
-  if($('focus').value==='custom') return $('customWords').value.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
-  return banks[$('focus').value]||banks.general;
-}
-function getCategories(){
-  if($('focus').value==='custom') return ['your custom word bank'];
-  return categoryPools[$('focus').value]||categoryPools.general;
-}
-function lettersFor(word){return word.replace(/[^a-z]/gi,'').toLowerCase();}
 
 function generate(){
   const game=$('game').value, diff=$('difficulty').value, focus=$('focus').value;
   const bank=getBank();
-  if(!bank.length){$('prompt').textContent='Add some words to your custom word bank first.';return;}
-  let prompt='',detail='';
-  const word=pick(bank), clean=lettersFor(word);
+  if(!bank.length){
+    $('prompt').textContent='Add some words to your custom word bank first.';
+    $('details').textContent='';
+    setTarget('');
+    return;
+  }
+
+  let prompt='',detail='',target='';
+  const word=pick(bank);
+  const clean=lettersFor(word);
 
   switch(game){
     case 'lastLetter': {
-      if(diff==='easy'){prompt='Start with: '+word+'. Continue the chain using the final letter each time.';detail='Any valid word is allowed. No repeats.';}
-      if(diff==='medium'){const cat=pick(getCategories());prompt='Last-Letter Chain — category: '+cat+'. Start with: '+word+'.';detail='Every new word must fit the category or word-class constraint.';}
-      if(diff==='hard'){prompt='Last-Letter Chain — after each word, define it, use it accurately, or explain its connotations.';detail='Start with: '+word+'. Require a brief explanation before the next turn.';}
+      target=word;
+      if(diff==='easy'){prompt=`Start with “${word}”. Continue the chain using the final letter each time.`;detail='Any valid word is allowed. No repeats.';}
+      if(diff==='medium'){const cat=pick(getCategories());prompt=`Last-Letter Chain — category: ${cat}. Start with “${word}”.`;detail='Every new word must fit the category or word-class constraint.';}
+      if(diff==='hard'){prompt=`Last-Letter Chain — start with “${word}”. After each word, define it, use it accurately, or explain its connotations.`;detail='Require a brief explanation before the next turn.';}
       break;
     }
     case 'alphabet': {
       const cat=pick(getCategories());
-      if(diff==='easy'){prompt='Alphabet Categories: '+cat+'. Start at A and find one valid answer for each letter.';detail='Skip impossible letters if needed.';}
-      if(diff==='medium'){prompt='Alphabet Categories — English focus: '+cat+'. Work through a selected letter range.';detail='Answers must genuinely fit the category.';}
-      if(diff==='hard'){prompt='Alphabet Categories: '+cat+'. Every answer must be justified with an example, sentence or textual connection.';detail='The justification matters more than speed.';}
+      target=cat;
+      if(diff==='easy'){prompt=`Alphabet Categories: ${cat}. Start at A and find one valid answer for each letter.`;detail='Skip impossible letters if needed.';}
+      if(diff==='medium'){prompt=`Alphabet Categories — ${cat}. Work through a selected letter range.`;detail='Answers must genuinely fit the category.';}
+      if(diff==='hard'){prompt=`Alphabet Categories: ${cat}. Every answer must be justified with an example, sentence or textual connection.`;detail='The justification matters more than speed.';}
       break;
     }
     case 'startEnd': {
-      let w=word; let c=lettersFor(w); if(c.length<3){w=pick(banks.general);c=lettersFor(w)}
+      let w=word; let c=lettersFor(w);
+      if(c.length<3){w=pick(banks.general);c=lettersFor(w)}
       const first=c[0].toUpperCase(), last=c[c.length-1].toUpperCase();
-      if(diff==='easy'){prompt=`Find any valid word beginning with ${first} and ending with ${last}.`;detail='Example source word hidden from students: '+w;}
-      if(diff==='medium'){prompt=`Find the longest word you can beginning with ${first} and ending with ${last}. Be ready to spell or define it.`;detail='Thinking first, then share.';}
-      if(diff==='hard'){prompt=`Find a ${focus==='general'?'curriculum-relevant':$('focus').selectedOptions[0].text.toLowerCase()} word beginning with ${first} and ending with ${last}, then use it accurately.`;detail='Add a semantic or word-class constraint if needed.';}
+      target=`${first} → ${last}`;
+      if(diff==='easy'){prompt=`Find any valid word beginning with ${first} and ending with ${last}.`;detail=`Generator used “${w}” to create a solvable letter pair.`;}
+      if(diff==='medium'){prompt=`Find the longest word you can beginning with ${first} and ending with ${last}. Be ready to spell or define it.`;detail=`One guaranteed example is “${w}”.`;}
+      if(diff==='hard'){prompt=`Find a curriculum-relevant word beginning with ${first} and ending with ${last}, then use it accurately.`;detail=`One guaranteed example is “${w}”. Add a semantic or word-class constraint if useful.`;}
       break;
     }
     case 'wordReveal': {
-      const chars=word.split(''); const masked=chars.map((ch,i)=>/[a-z]/i.test(ch)&&i!==0&&i!==chars.length-1?'_':ch).join(' ');
-      if(diff==='easy'){prompt='Word Reveal: '+masked;detail='Answer: '+word;}
-      if(diff==='medium'){prompt='Word Reveal: '+masked+'\nClue: '+definitionClue(word,focus);detail='Answer: '+word;}
-      if(diff==='hard'){prompt='Infer the curriculum term from the clue, then explain its use or effect:\n'+applicationClue(word,focus);detail='Answer: '+word;}
+      target=word;
+      const chars=word.split('');
+      const masked=chars.map((ch,i)=>/[a-z]/i.test(ch)&&i!==0&&i!==chars.length-1?'_':ch).join(' ');
+      if(diff==='easy'){prompt=`Word Reveal: ${masked}`;detail=`Answer: ${word}`;}
+      if(diff==='medium'){prompt=`Word Reveal: ${masked}\nClue: ${definitionClue(word,focus)}`;detail=`Answer: ${word}`;}
+      if(diff==='hard'){prompt=`Infer the curriculum term from the clue, then explain its use or effect:\n${applicationClue(word,focus)}`;detail=`Answer: ${word}`;}
       break;
     }
     case 'letterBank': {
       const letters=sample('AAABCDEEEFGHIIJKLMNOOPQRSTTUVWY'.split(''),10).join(' ');
-      if(diff==='easy'){prompt='Letter Bank: '+letters+'\nMake as many valid words as you can in one minute.';detail='Score by number of valid words or longest word.';}
-      if(diff==='medium'){prompt='Letter Bank: '+letters+'\nBuild words that match this focus: '+pick(getCategories())+'.';detail='Ask students to identify word class, root, prefix or suffix where relevant.';}
-      if(diff==='hard'){prompt='Letter Bank: '+letters+'\nBuild the strongest academic or text-relevant word you can, then use it in an accurate sentence.';detail='Quality beats quantity.';}
+      target=letters;
+      if(diff==='easy'){prompt=`Letter Bank: ${letters}\nMake as many valid words as you can in one minute.`;detail='Score by number of valid words or longest word.';}
+      if(diff==='medium'){prompt=`Letter Bank: ${letters}\nBuild words that match this focus: ${pick(getCategories())}.`;detail='Ask students to identify word class, root, prefix or suffix where relevant.';}
+      if(diff==='hard'){prompt=`Letter Bank: ${letters}\nBuild the strongest academic or text-relevant word you can, then use it in an accurate sentence.`;detail='Quality beats quantity.';}
       break;
     }
     case 'wordTennis': {
       const cat=pick(getCategories());
-      if(diff==='easy'){prompt='Word Tennis: alternate valid words in the category "'+cat+'". No repeats.';detail='Keep the rhythm brisk.';}
-      if(diff==='medium'){prompt='Word Tennis: alternate English terms in "'+cat+'". No repeats.';detail='Pause only to verify doubtful answers.';}
-      if(diff==='hard'){prompt='Word Tennis: every answer in "'+cat+'" must also include one accurate use, example or effect.';detail='Teams can confer briefly.';}
+      target=cat;
+      if(diff==='easy'){prompt=`Word Tennis: alternate valid words in the category “${cat}”. No repeats.`;detail='Keep the rhythm brisk.';}
+      if(diff==='medium'){prompt=`Word Tennis: alternate English terms in “${cat}”. No repeats.`;detail='Pause only to verify doubtful answers.';}
+      if(diff==='hard'){prompt=`Word Tennis: every answer in “${cat}” must also include one accurate use, example or effect.`;detail='Teams can confer briefly.';}
       break;
     }
     case 'oddOneOut': {
-      let items=sample(bank,4); while(items.length<4) items.push(...sample(banks.general,4-items.length));
-      prompt='Odd One Out: '+items.join(' • ')+'\nWhich one is different? Defend your reasoning.';
+      let items=sample(bank,4);
+      while(items.length<4) items.push(...sample(banks.general,4-items.length));
+      target=items.join(' • ');
+      prompt=`Odd One Out: ${items.join(' • ')}\nWhich one is different? Defend your reasoning.`;
       detail=diff==='easy'?'Aim for one fairly obvious distinction.':diff==='medium'?'Look for a meaningful shared category and one partial mismatch.':'Multiple answers may be defensible if justified with evidence.';
       break;
     }
     case 'mysteryWord': {
-      if(diff==='easy'){prompt='Mystery Word — choose an everyday term. One clue per student until the guesser gets it.';detail='Suggested word: '+word+'\nNo saying, spelling, rhyming or repeating clues.';}
-      if(diff==='medium'){prompt='Mystery Word — English focus: '+$('focus').selectedOptions[0].text+'. One clue per student.';detail='Suggested answer: '+word+'\nClues should move from broad category to distinguishing features.';}
-      if(diff==='hard'){prompt='Mystery Word — use a concept, representation, perspective, stylistic device or genre convention. Clues must show genuine understanding.';detail='Suggested answer: '+word+'\nTeacher rejects vague or giveaway clues.';}
+      target=word;
+      if(diff==='easy'){
+        prompt='Mystery Word: the guesser turns away while the class reads the target. Give one clue per student until the word is guessed.';
+        detail='No saying, spelling, rhyming or repeating clues.';
+      }
+      if(diff==='medium'){
+        prompt='Mystery Word: give one clue per student. Move from broad category clues towards distinguishing features. The guesser may answer after each clue.';
+        detail=`Selected from your ${focus==='custom'?'custom word bank':$('focus').selectedOptions[0].text.toLowerCase()}.
+No saying, spelling, rhyming or repeating clues.`;
+      }
+      if(diff==='hard'){
+        prompt='Mystery Word: each clue must demonstrate genuine understanding of the target. Vague clues and giveaway clues do not count.';
+        detail=`Selected target: ${word}\nRequire clues about meaning, function, textual use, relationship or effect where appropriate.`;
+      }
       break;
     }
     case 'sentenceStretch': {
       const s=pick(plainSentences);
-      if(diff==='easy'){prompt='Sentence Stretch: '+s+'\nAdd one useful adjective, adverb or detail per turn.';detail='Keep the sentence grammatical.';}
-      if(diff==='medium'){prompt='Sentence Stretch: '+s+'\nAdd clauses, phrases, punctuation or imagery one move at a time.';detail='After each move, name what changed.';}
-      if(diff==='hard'){prompt='Sentence Stretch: '+s+'\nReshape voice, tone, pace, viewpoint or stylistic effect one deliberate move at a time.';detail='Every change must serve a purpose.';}
+      target=s;
+      if(diff==='easy'){prompt=`Sentence Stretch: ${s}\nAdd one useful adjective, adverb or detail per turn.`;detail='Keep the sentence grammatical.';}
+      if(diff==='medium'){prompt=`Sentence Stretch: ${s}\nAdd clauses, phrases, punctuation or imagery one move at a time.`;detail='After each move, name what changed.';}
+      if(diff==='hard'){prompt=`Sentence Stretch: ${s}\nReshape voice, tone, pace, viewpoint or stylistic effect one deliberate move at a time.`;detail='Every change must serve a purpose.';}
       break;
     }
     case 'oneWordStory': {
-      prompt='One-Word Story: '+pick(storyConstraints[diff]);
+      const constraint=pick(storyConstraints[diff]);
+      target=constraint;
+      prompt=`One-Word Story: ${constraint}`;
       detail='Move in a predetermined order. Each student contributes exactly one word. Stop and repair grammar or cohesion if needed.';
       break;
     }
   }
 
+  setTarget(target);
   $('prompt').textContent=prompt;
   $('details').textContent=detail;
   $('details').classList.add('hidden');
@@ -256,8 +345,10 @@ function definitionClue(word,focus){
     creative:'This term relates to choices writers make when crafting imaginative texts.',
     textstudy:'This term can be used when discussing a studied text.',
     custom:'Give a definition or contextual clue drawn from your current unit.'
-  }; return generic[focus]+' Target length: '+word.length+' characters.';
+  };
+  return generic[focus]+' Target length: '+word.length+' characters.';
 }
+
 function applicationClue(word,focus){
   const options={
     literary:'A writer uses this choice to shape how an audience interprets an idea. Identify the term, then explain a possible effect.',
@@ -267,11 +358,19 @@ function applicationClue(word,focus){
     creative:'Identify the craft choice from an example, then explain how it shapes the reader experience.',
     textstudy:'Infer the text-study term from an example or quotation, then connect it to meaning.',
     general:'Infer the target word from an example, then define and use it.',
-    custom:'Use one of your custom unit terms. Give an example, quotation or contextual clue, then require explanation.'
-  }; return options[focus]+'\n(Target for teacher: '+word+')';
+    custom:'Use the selected custom unit term. Give an example, quotation or contextual clue, then require explanation.'
+  };
+  return options[focus];
 }
 
-generate();
+// Start in Mystery Word mode because that is the current prototype test.
+gameSelect.value='mysteryWord';
+$('difficulty').value='medium';
+$('focus').value='custom';
+$('customWrap').classList.remove('hidden');
+updateBankStatus();
+$('prompt').textContent='Paste a custom word bank, then click Generate round.';
+setTarget('');
 </script>
 </body>
 </html>
