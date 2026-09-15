@@ -3,12 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Ten low-prep classroom word games. Choose a game, set the difficulty and generate a round with Mrs Knox Teaches.">
-  <meta name="application-version" content="2026-09-15-illustrated">
+  <meta name="description" content="Ten low-prep classroom word games. Choose a game and generate a classroom round with Mrs Knox Teaches.">
+  <meta name="application-version" content="2026-09-15-game-settings2">
   <title>Word Game Generator | Mrs Knox Teaches</title>
-  <link rel="stylesheet" href="styles.css?v=20260915">
-  <script defer src="data.js?v=20260915"></script>
-  <script defer src="app.js?v=20260915"></script>
+  <link rel="stylesheet" href="styles.css?v=20260915-controls2">
+  <link rel="stylesheet" href="settings.css?v=20260915-controls2">
+  <script defer src="data.js?v=20260915-controls2"></script>
+  <script defer src="word-clues.js?v=20260915-controls2"></script>
+  <script defer src="odd-one-out.js?v=20260915-controls2"></script>
+  <script defer src="app.js?v=20260915-controls2"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to games</a>
@@ -17,7 +20,7 @@
   <main id="main">
     <section id="landing" aria-labelledby="homeTitle">
       <div class="hero">
-        <div><h1 id="homeTitle">Word Game Generator</h1><p>Choose a game, then set the difficulty and content.</p></div>
+        <div><h1 id="homeTitle">Word Game Generator</h1><p>Choose a game and generate a round.</p></div>
         <button class="button surprise" id="surpriseLanding" type="button">Surprise me <span aria-hidden="true">&#8594;</span></button>
       </div>
       <div class="game-grid" id="gameCards" aria-label="Choose from ten games"></div>
@@ -28,14 +31,20 @@
       <details class="rules"><summary>How to play</summary><ol id="gameRules"></ol></details>
       <section class="setup panel" aria-labelledby="setupTitle">
         <h2 id="setupTitle">Set up your round</h2>
-        <div class="control-grid">
-          <div><label for="difficulty">Difficulty</label><select id="difficulty"><option value="easy">Easy - retrieve</option><option value="medium">Medium - classify / understand</option><option value="hard">Hard - explain / apply</option></select></div>
-          <div><label for="focus">English focus</label><select id="focus"><option value="general">General vocabulary</option><option value="grammar">Grammar / word classes</option><option value="persuasive">Persuasive language</option><option value="literary">Literary devices</option><option value="analytical">Analytical vocabulary</option><option value="creative">Creative writing</option><option value="textstudy">Text study</option><option value="custom">My own word bank</option></select></div>
+        <div class="control-grid" id="controlGrid">
+          <div id="difficultyControl" hidden><label for="difficulty" id="difficultyLabel">Difficulty</label><select id="difficulty" disabled><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
+          <div id="focusControl" hidden><label for="focus" id="focusLabel">Word bank</label><select id="focus" disabled><option value="general">General vocabulary</option><option value="grammar">Grammar terms</option><option value="persuasive">Persuasive language</option><option value="literary">Literary terms</option><option value="analytical">Analytical verbs</option><option value="creative">Creative writing</option><option value="textstudy">Text study</option><option value="custom">My own word bank</option></select></div>
+          <div id="categoryControl" hidden><label for="category">Category</label><select id="category" disabled></select></div>
+          <div id="letterCountControl" hidden><label for="letterCount">Number of letters</label><select id="letterCount" disabled><option value="8">8 letters</option><option value="9">9 letters</option><option value="10" selected>10 letters</option></select></div>
+          <div id="sentenceControl" hidden><label for="sentenceInput">Starting sentence (optional)</label><input id="sentenceInput" type="text" maxlength="500" placeholder="Leave blank for a generated sentence" disabled></div>
+          <div id="storyControl" hidden><label for="storyConstraint">Story constraint</label><select id="storyConstraint" disabled><option value="none">No added constraint</option><option value="random">Choose a constraint for me</option></select></div>
         </div>
         <div id="customWrap" hidden>
-          <label for="customWords">Custom word bank</label>
-          <textarea id="customWords" rows="5" placeholder="One term per line. Optional: term | clue" aria-describedby="bankHelp bankStatus"></textarea>
-          <p class="help" id="bankHelp">For Word Reveal, add a clue after a vertical bar: <code>mentor | a guide who offers advice, knowledge or support</code>. Your bank stays here while you switch games; it is cleared when you reload or close this page.</p>
+          <div id="customCategoryControl" hidden><label for="customCategory">Name the category</label><input id="customCategory" type="text" maxlength="120" placeholder="e.g. Gothic settings or animal adaptations" disabled></div>
+          <label for="customWords" id="customWordsLabel">Custom word bank</label>
+          <textarea id="customWords" rows="5" placeholder="One term per line" aria-describedby="bankHelp bankStatus" disabled></textarea>
+          <p class="help" id="clueHelp" hidden>For Word Reveal, add a clue after a vertical bar: <code>mentor | a guide who offers advice, knowledge or support</code>.</p>
+          <p class="help" id="bankHelp">Your bank stays here while you switch games; it is cleared when you reload or close this page.</p>
           <p class="bank-status" id="bankStatus" aria-live="polite"></p>
         </div>
         <div class="actions"><button class="button primary" id="generate" type="button">Generate round</button><span class="status" id="status" role="status"></span></div>

@@ -1,14 +1,17 @@
-/* Existing prototype word banks and clues, retained for the illustrated interface. */
+/* Built-in banks. Analytical verbs are kept separate from text-study concepts. */
 (function(){
-const banks={general:['journey','forest','courage','memory','storm','friendship','shadow','discovery','challenge','change','freedom','danger','hope','silence','choice','power','home','secret','truth','conflict'],grammar:['noun','verb','adjective','adverb','pronoun','preposition','conjunction','clause','phrase','subject','tense','modality','syntax','punctuation','nominalisation'],persuasive:['modality','rhetorical question','inclusive language','emotive language','repetition','statistics','expert opinion','anecdote','imperative','contention','audience','purpose','tone'],literary:['metaphor','simile','personification','symbolism','imagery','juxtaposition','foreshadowing','allusion','irony','motif','characterisation','setting','narrative voice','diction','contrast'],analytical:['represents','constructs','positions','suggests','reveals','reinforces','challenges','foregrounds','contrasts','symbolises','emphasises','conveys','perspective','representation','assumption','value','belief'],creative:['mystery','tension','setting','voice','imagery','dialogue','conflict','character','symbol','motif','flashback','sensory detail','pace','viewpoint','tone'],textstudy:['character','setting','event','relationship','quotation','concept','representation','perspective','theme','conflict','turning point','symbol','motif','genre convention']};
-const categoryPools={general:['animals','foods','places','objects','emotions','actions'],grammar:['nouns','verbs','adjectives','adverbs','conjunctions','sentence types'],persuasive:['persuasive techniques','appeals','high-modality words','emotive words','analytical verbs'],literary:['language features','literary devices','character traits','mood words','Gothic conventions'],analytical:['analytical verbs','concepts','representation words','perspective words','evaluative vocabulary'],creative:['setting words','sensory verbs','character traits','mood words','dialogue verbs'],textstudy:['characters','settings','events','relationships','concepts','quotations']};
+const banks={
+general:['journey','forest','courage','memory','storm','friendship','shadow','discovery','challenge','change','freedom','danger','hope','silence','choice','power','home','secret','truth','conflict'],
+grammar:['noun','verb','adjective','adverb','pronoun','preposition','conjunction','clause','phrase','object','subject','tense','modality','syntax','punctuation','nominalisation'],
+persuasive:['modality','rhetorical question','inclusive language','emotive language','repetition','statistics','expert opinion','anecdote','imperative','appeal','contention','audience','purpose','tone'],
+literary:['metaphor','simile','personification','symbolism','imagery','juxtaposition','foreshadowing','allusion','irony','motif','characterisation','setting','narrative voice','diction','contrast','syntax'],
+analytical:['represents','constructs','positions','suggests','reveals','reinforces','challenges','foregrounds','contrasts','symbolises','emphasises','conveys','complicates','invites','assumes','supports','endorses','highlights','conceals','exposes','discloses','questions','undermines','implies','asserts'],
+creative:['mystery','tension','setting','voice','imagery','dialogue','conflict','character','symbol','motif','flashback','sensory detail','pace','viewpoint','tone'],
+textstudy:['character','setting','event','relationship','quotation','concept','representation','perspective','theme','conflict','turning point','symbol','motif','genre convention','assumption','value','belief']
+};
+const categoryPools={general:['animals','foods','places','objects','emotions','actions'],grammar:['nouns','verbs','adjectives','adverbs','conjunctions','sentence types'],persuasive:['persuasive techniques','appeals','high-modality words','emotive words','analytical verbs'],literary:['language features','literary devices','character traits','mood words','Gothic conventions'],analytical:['analytical verbs'],creative:['setting words','sensory verbs','character traits','mood words','dialogue verbs'],textstudy:['characters','settings','events','relationships','concepts','quotations']};
 const plainSentences=['The character walked into the room.','The wind moved through the trees.','She opened the letter.','He looked across the field.','The door closed behind them.','The crowd became quiet.'];
 const storyConstraints={easy:['Build any coherent classroom-safe story.'],medium:['Mystery genre','Past tense','Set in a school','Use at least one adverb','Set in space','Include a storm'],hard:['Create a tense tone','Use first-person perspective','Build towards a twist','Include a recurring symbol','Create a hopeful tone','Use deliberately short sentences']};
-banks.grammar.splice(9,0,'object');
-banks.persuasive.splice(9,0,'appeal');
-banks.literary.splice(15,0,'syntax');
-banks.analytical.splice(12,0,'complicates','invites');
-
 const clues={
 'noun':'a word that names a person, place, thing or idea',
 'verb':'a word that expresses an action, process or state',
@@ -56,7 +59,7 @@ const clues={
 'assumption':'an idea treated as true or normal without necessarily being stated or proved',
 'value':'a principle or quality regarded as important or desirable',
 'belief':'an idea accepted as true or held to be important',
- 'tension':'a sense of pressure, uncertainty or conflict that keeps an audience anticipating what may happen',
+'tension':'a sense of pressure, uncertainty or conflict that keeps an audience anticipating what may happen',
 'suspense':'deliberate uncertainty or anticipation about what will happen next',
 'protagonist':'the central character whose goals or experiences drive much of the story',
 'antagonist':'a person, force or obstacle that opposes the protagonist',
@@ -97,8 +100,32 @@ const clues={
 'guide':'a person, voice or source that helps someone navigate a challenge or journey',
 'adversity':'difficult conditions, misfortune or obstacles that must be faced',
 'victory':'a successful outcome after conflict, struggle or competition',
-'change':'a shift from one state, condition, belief or situation to another'
+'change':'a shift from one state, condition, belief or situation to another',
+'represents':'presents or depicts an idea, person, group or experience in a particular way',
+'constructs':'builds or shapes a particular meaning, identity or version of reality',
+'positions':'encourages an audience to adopt a particular response or viewpoint',
+'suggests':'puts forward an idea without necessarily stating it directly or conclusively',
+'reveals':'makes previously hidden information or meaning apparent',
+'reinforces':'strengthens an existing idea, attitude or belief',
+'challenges':'questions or contests an idea, assumption or accepted position',
+'foregrounds':'places something in a prominent position for the audience to notice',
+'contrasts':'draws attention to differences between things',
+'symbolises':'stands for or conveys an additional idea beyond its literal identity',
+'emphasises':'gives particular importance or attention to something',
+'conveys':'communicates an idea, impression or feeling',
+'complicates':'makes an idea less simple by introducing additional factors or tensions',
+'invites':'encourages an audience to consider or adopt a response',
+'assumes':'treats an idea as true or given without necessarily establishing it',
+'supports':'provides backing for an idea, position or interpretation',
+'endorses':'expresses approval of or agreement with an idea or position',
+'highlights':'makes something especially noticeable or important',
+'conceals':'hides information or prevents it from being readily seen',
+'exposes':'brings something hidden or concealed to attention',
+'discloses':'makes previously unknown information known',
+'questions':'expresses doubt about an idea or examines whether it should be accepted',
+'undermines':'weakens the authority, credibility or force of something',
+'implies':'communicates an idea indirectly rather than stating it explicitly',
+'asserts':'states a position confidently as true'
 };
-
 window.GAME_DATA={banks,clues,categoryPools,plainSentences,storyConstraints};
 })();

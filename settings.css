@@ -1,0 +1,5 @@
+/* Game-specific settings; inherit the established visual system. */
+input{font:inherit;width:100%;padding:12px;border:1.5px solid #8a9d90;border-radius:5px;background:#fff;color:var(--ink);font-size:16px;min-width:0}
+input:focus-visible{outline:3px solid var(--green);outline-offset:4px}
+.control-grid>div{min-width:0}.control-grid.single-control{grid-template-columns:minmax(0,1fr);max-width:620px}
+#customCategoryControl{margin-bottom:18px}.target-word,.projection-answer{white-space:pre-wrap}
