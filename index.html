@@ -1,177 +1,68 @@
 <!doctype html>
 <html lang="en-AU">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mrs Knox Teaches Word Game Generator</title>
-  <style>
-    body{font-family:Arial,sans-serif;max-width:1050px;margin:0 auto;padding:24px;line-height:1.4;background:#f7f7f7;color:#222}
-    h1{margin-bottom:4px}.sub{margin-top:0;color:#555}.panel{background:#fff;border:1px solid #bbb;padding:16px;margin:16px 0;border-radius:8px}
-    label{font-weight:700;display:block;margin-top:12px}select,textarea,button{font:inherit;padding:10px;margin-top:6px}select,textarea{width:100%;box-sizing:border-box}
-    .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-    button{cursor:pointer;border:1px solid #777;background:#eee;border-radius:6px}button.primary{background:#222;color:#fff}
-    #prompt{font-size:1.45rem;font-weight:700;padding:20px;border:2px solid #222;background:#fff;min-height:80px;white-space:pre-wrap}
-    #targetPanel{padding:16px;border:2px dashed #555;margin:14px 0;background:#fffbe8}
-    #targetWord{font-size:2rem;font-weight:800;margin-top:4px;word-break:break-word}
-    #details{white-space:pre-wrap;background:#fafafa;border:1px solid #ddd;padding:14px;margin-top:12px}
-    .hidden{display:none!important}.tag{display:inline-block;padding:3px 8px;border:1px solid #aaa;border-radius:20px;margin-right:6px;font-size:.9rem}
-    .small{font-size:.9rem;color:#555;margin-top:6px}.status{font-size:.9rem;color:#333;margin-top:6px}
-    .warning{background:#fff4d6;border:1px solid #c89a2b;padding:10px;margin-top:10px}
-    @media(max-width:700px){.row{grid-template-columns:1fr}}
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Ten low-prep classroom word games. Choose a game, set the difficulty and generate a round with Mrs Knox Teaches.">
+  <meta name="application-version" content="2026-09-15-illustrated">
+  <title>Word Game Generator | Mrs Knox Teaches</title>
+  <link rel="stylesheet" href="styles.css?v=20260915">
+  <script defer src="data.js?v=20260915"></script>
+  <script defer src="app.js?v=20260915"></script>
 </head>
 <body>
-  <h1>Mrs Knox Teaches Word Game Generator</h1>
-  <p class="sub">Plain prototype for testing game logic before we make it pretty.</p>
-
-  <div class="panel">
-    <div class="row">
-      <div>
-        <label for="game">Game</label>
-        <select id="game"></select>
+<a class="skip" href="#main">Skip to games</a>
+<div class="wrap">
+  <header class="brand"><a href="#" id="brandHome">Mrs Knox Teaches</a></header>
+  <main id="main">
+    <section id="landing" aria-labelledby="homeTitle">
+      <div class="hero">
+        <div><h1 id="homeTitle">Word Game Generator</h1><p>Choose a game, then set the difficulty and content.</p></div>
+        <button class="button surprise" id="surpriseLanding" type="button">Surprise me <span aria-hidden="true">&#8594;</span></button>
       </div>
-      <div>
-        <label for="difficulty">Difficulty</label>
-        <select id="difficulty">
-          <option value="easy">Easy — retrieve</option>
-          <option value="medium">Medium — classify / understand</option>
-          <option value="hard">Hard — explain / apply</option>
-        </select>
-      </div>
-      <div>
-        <label for="focus">English focus</label>
-        <select id="focus">
-          <option value="general">General vocabulary</option>
-          <option value="grammar">Grammar / word classes</option>
-          <option value="persuasive">Persuasive language</option>
-          <option value="literary">Literary devices</option>
-          <option value="analytical">Analytical vocabulary</option>
-          <option value="creative">Creative writing</option>
-          <option value="textstudy">Text study</option>
-          <option value="custom">My own word bank</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="customWrap" class="hidden">
-      <label for="customWords">Custom word bank</label>
-      <textarea id="customWords" rows="7" placeholder="One term per line. Optional clue: term | clue"></textarea>
-      <div class="small">Recommended: one term per line. For Word Reveal, you can add your own clue after a vertical bar, e.g. <strong>call to adventure | the moment that invites or forces the hero into the journey</strong>.</div>
-      <div id="bankStatus" class="status"></div>
-    </div>
-
-    <div class="controls">
-      <button id="generate" class="primary">Generate round</button>
-      <button id="surprise">Surprise me</button>
-      <button id="copy">Copy classroom prompt</button>
-      <button id="toggleTarget">Hide target from guesser</button>
-      <button id="reveal">Reveal / extra detail</button>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div>
-      <span class="tag" id="gameTag"></span>
-      <span class="tag" id="difficultyTag"></span>
-      <span class="tag" id="focusTag"></span>
-    </div>
-
-    <div id="targetPanel">
-      <strong id="targetLabel">Teacher / class target</strong>
-      <div id="targetWord">—</div>
-      <div id="targetHelp" class="small">This is separate from the classroom prompt so it can be hidden when needed.</div>
-    </div>
-
-    <h2>Classroom prompt</h2>
-    <div id="prompt">Choose options and generate a round.</div>
-    <div id="details" class="hidden"></div>
-  </div>
-
-  <div class="panel">
-    <h2>Prototype test checklist</h2>
-    <ul>
-      <li>Does the custom bank count the terms you pasted?</li>
-      <li>Does Generate round pick an actual target from that bank?</li>
-      <li>For Mystery Word and Word Reveal, is the answer kept out of the classroom prompt?</li>
-      <li>Does Word Reveal give a usable clue when one is available?</li>
-      <li>Does Easy / Medium / Hard meaningfully change the English thinking?</li>
-    </ul>
-  </div>
-
-<script>
-const games = [
-  ['lastLetter','Last-Letter Word Chain'],
-  ['alphabet','Alphabet Categories'],
-  ['startEnd','Start-End Letter Challenge'],
-  ['wordReveal','Word Reveal'],
-  ['letterBank','Letter Bank'],
-  ['wordTennis','Word Tennis'],
-  ['oddOneOut','Odd One Out'],
-  ['mysteryWord','Mystery Word'],
-  ['sentenceStretch','Sentence Stretch'],
-  ['oneWordStory','One-Word Story']
-];
-
-const banks = {
-  general:['journey','forest','courage','memory','storm','friendship','shadow','discovery','challenge','change','freedom','danger','hope','silence','choice','power','home','secret','truth','conflict'],
-  grammar:['noun','verb','adjective','adverb','pronoun','preposition','conjunction','clause','phrase','subject','object','tense','modality','syntax','punctuation','nominalisation'],
-  persuasive:['modality','rhetorical question','inclusive language','emotive language','repetition','statistics','expert opinion','anecdote','imperative','appeal','contention','audience','purpose','tone'],
-  literary:['metaphor','simile','personification','symbolism','imagery','juxtaposition','foreshadowing','allusion','irony','motif','characterisation','setting','narrative voice','diction','syntax','contrast'],
-  analytical:['represents','constructs','positions','suggests','reveals','reinforces','challenges','foregrounds','contrasts','symbolises','emphasises','conveys','complicates','invites','perspective','representation','assumption','value','belief'],
-  creative:['mystery','tension','setting','voice','imagery','dialogue','conflict','character','symbol','motif','flashback','sensory detail','pace','viewpoint','tone'],
-  textstudy:['character','setting','event','relationship','quotation','concept','representation','perspective','theme','conflict','turning point','symbol','motif','genre convention']
-};
-
-const clueBank = {
-  'noun':'a word that names a person, place, thing or idea','verb':'a word that expresses an action, process or state','adjective':'a word that describes or modifies a noun','adverb':'a word that modifies a verb, adjective or another adverb','pronoun':'a word used in place of a noun or noun group','preposition':'a word that shows a relationship such as place, time or direction','conjunction':'a word that joins words, phrases or clauses','clause':'a group of words built around a verb that forms part or all of a sentence','phrase':'a group of words that works as a unit but does not necessarily contain a complete clause','subject':'the person, thing or idea that a clause is about','tense':'the grammatical system used to locate actions or states in time','modality':'language that expresses degrees of certainty, obligation or possibility','syntax':'the arrangement of words and clauses within sentences','punctuation':'marks used to organise written language and shape meaning','nominalisation':'turning a verb, adjective or other form into a noun or noun group',
-  'rhetorical question':'a question asked for effect rather than to obtain an answer','inclusive language':'language that deliberately includes the audience in a group or shared position','emotive language':'word choices designed to provoke an emotional response','repetition':'deliberate reuse of a word, phrase, sound or idea for emphasis or pattern','statistics':'numerical evidence used to support a claim','expert opinion':'evidence drawn from a person presented as knowledgeable or authoritative','anecdote':'a brief personal or illustrative story used to support a point','imperative':'a command form that directs someone to act or think in a particular way','contention':'the central position or argument a text advances','audience':'the people a text is designed to address','purpose':'what a text is trying to achieve',
-  'metaphor':'a comparison that describes one thing as another without using like or as','simile':'a comparison that commonly uses like or as','personification':'giving human qualities or actions to something non-human','symbolism':'the use of an object, image, place or action to carry additional meaning','imagery':'descriptive language that creates sensory or vivid mental impressions','juxtaposition':'placing elements close together so their similarities or differences become significant','foreshadowing':'an early hint or suggestion of something that will occur later','allusion':'an indirect reference to another text, person, event, myth or cultural idea','irony':'a contrast between expectation, appearance or stated meaning and what is actually meant or occurs','motif':'a recurring image, idea, object or pattern that contributes to meaning','characterisation':'the methods used to construct and develop a character','setting':'the time, place and social environment in which events occur','narrative voice':'the voice or position through which a story is told','diction':'a writer’s deliberate choice of words','contrast':'a deliberate emphasis on differences between two or more things',
-  'perspective':'a position or way of viewing people, ideas, events or the world','representation':'the way a text constructs or presents a concept, identity, time, place or experience','assumption':'an idea treated as true or normal without necessarily being stated or proved','value':'a principle or quality regarded as important or desirable','belief':'an idea accepted as true or held to be important','tension':'a sense of pressure, uncertainty or conflict that keeps an audience anticipating what may happen','suspense':'deliberate uncertainty or anticipation about what will happen next','protagonist':'the central character whose goals or experiences drive much of the story','antagonist':'a person, force or obstacle that opposes the protagonist','relationship':'the connection or dynamic between people, characters, groups or ideas','conflict':'a struggle between competing goals, values, people or forces','tone':'the attitude or feeling conveyed through language and stylistic choices','theme':'a recurring or developed idea explored through a text','concept':'an abstract idea that can be represented and explored in different ways','quotation':'the exact words taken from a text as evidence',
-  'ordinary world':'the hero’s familiar starting situation before the central journey begins','call to adventure':'the event, invitation or disruption that draws the hero towards the journey','refusal':'the stage where the hero resists, fears or avoids the call','mentor':'a guide who gives the hero advice, knowledge, training or support','threshold':'a boundary between the familiar world and a new or challenging space','guardian':'a figure or obstacle that tests whether the hero is ready to move forward','ally':'a person who supports the hero during the journey','enemy':'a person or force that works against the hero’s goals','trickster':'a disruptive or comic figure who challenges expectations and can provoke change','crossing the threshold':'the point where the hero commits to leaving the familiar world and entering the journey','ordeal':'a major crisis or test in which the hero faces severe danger, loss or fear','reward':'what the hero gains after surviving or overcoming a major challenge','road back':'the stage where the hero begins the return journey and faces the consequences of what has happened','resurrection':'a final major test that demonstrates the hero’s transformation','return':'the hero’s movement back towards the ordinary world after the central journey','elixir':'the knowledge, gift, insight or benefit the hero brings back from the journey','transformation':'a meaningful change in the hero’s identity, understanding, values or behaviour','quest':'a purposeful journey towards a difficult goal','sacrifice':'giving up something valued for a larger purpose or another person','courage':'the willingness to act despite fear or danger','identity':'a sense of who a person is and how that self is understood or constructed','belonging':'a sense of connection, acceptance or membership within a group or place','temptation':'an attraction towards a choice that may distract from a goal or challenge values','growth':'development in understanding, skill, character or maturity','failure':'an unsuccessful attempt or outcome that can create consequences or learning','perseverance':'continuing to work towards a goal despite difficulty or setbacks','homecoming':'a return home that may reveal how the traveller or home has changed','outsider':'a person positioned as separate from, excluded by or unfamiliar to a group','guide':'a person, voice or source that helps someone navigate a challenge or journey','adversity':'difficult conditions, misfortune or obstacles that must be faced','victory':'a successful outcome after conflict, struggle or competition','change':'a shift from one state, condition, belief or situation to another'
-};
-
-const categoryPools = {
-  general:['animals','foods','places','objects','emotions','actions'],grammar:['nouns','verbs','adjectives','adverbs','conjunctions','sentence types'],persuasive:['persuasive techniques','appeals','high-modality words','emotive words','analytical verbs'],literary:['language features','literary devices','character traits','mood words','Gothic conventions'],analytical:['analytical verbs','concepts','representation words','perspective words','evaluative vocabulary'],creative:['setting words','sensory verbs','character traits','mood words','dialogue verbs'],textstudy:['characters','settings','events','relationships','concepts','quotations']
-};
-
-const plainSentences=['The character walked into the room.','The wind moved through the trees.','She opened the letter.','He looked across the field.','The door closed behind them.','The crowd became quiet.'];
-const storyConstraints={easy:['Build any coherent classroom-safe story.'],medium:['Mystery genre','Past tense','Set in a school','Use at least one adverb','Set in space','Include a storm'],hard:['Create a tense tone','Use first-person perspective','Build towards a twist','Include a recurring symbol','Create a hopeful tone','Use deliberately short sentences']};
-
-const $=id=>document.getElementById(id);const pick=a=>a[Math.floor(Math.random()*a.length)];const sample=(a,n)=>[...a].sort(()=>Math.random()-.5).slice(0,n);const labels={easy:'Easy',medium:'Medium',hard:'Hard'};let currentTarget='';let targetHidden=false;
-const gameSelect=$('game');games.forEach(([v,n])=>{const o=document.createElement('option');o.value=v;o.textContent=n;gameSelect.appendChild(o)});
-
-function parseCustomBank(){const raw=$('customWords').value.trim();if(!raw)return[];let rows=raw.includes('\n')?raw.split(/\n+/):raw.split(/[;,]+/);return rows.map(row=>{const parts=row.split('|');const term=(parts.shift()||'').trim();const clue=parts.join('|').trim();return{term,clue};}).filter(item=>item.term);}
-function getBankItems(){if($('focus').value==='custom')return parseCustomBank();return(banks[$('focus').value]||banks.general).map(term=>({term,clue:''}));}
-function getCategories(){if($('focus').value==='custom')return['your current text / unit'];return categoryPools[$('focus').value]||categoryPools.general;}
-function lettersFor(word){return word.replace(/[^a-z]/gi,'').toLowerCase();}
-function wordPattern(term){return term.split('').map((ch,i,arr)=>{if(!/[a-z]/i.test(ch))return ch;const prev=i===0?' ':arr[i-1];const next=i===arr.length-1?' ':arr[i+1];const firstInWord=i===0||/\s|-/.test(prev);const lastInWord=i===arr.length-1||/\s|-/.test(next);return firstInWord||lastInWord?ch.toUpperCase():'_';}).join(' ');}
-function structureHint(term){const words=term.trim().split(/\s+/);const lengths=words.map(w=>lettersFor(w).length).join(' + ');return`${words.length} word${words.length===1?'':'s'}; ${lengths} letters`;}
-function clueFor(item){if(item.clue)return item.clue;return clueBank[item.term.toLowerCase()]||'';}
-function updateBankStatus(){if($('focus').value!=='custom')return;const items=parseCustomBank();const withClues=items.filter(i=>clueFor(i)).length;$('bankStatus').textContent=items.length?`${items.length} terms loaded. ${withClues} currently have usable clues for Word Reveal.`:'No terms loaded yet.';}
-function setTarget(word,label='Teacher / class target',help='This is separate from the classroom prompt so it can be hidden when needed.'){currentTarget=word||'';$('targetLabel').textContent=label;$('targetHelp').textContent=help;targetHidden=false;$('targetWord').textContent=currentTarget||'—';$('toggleTarget').textContent='Hide target from guesser';}
-function toggleTarget(){if(!currentTarget)return;targetHidden=!targetHidden;$('targetWord').textContent=targetHidden?'TARGET HIDDEN':currentTarget;$('toggleTarget').textContent=targetHidden?'Show target':'Hide target from guesser';}
-
-$('focus').addEventListener('change',()=>{$('customWrap').classList.toggle('hidden',$('focus').value!=='custom');updateBankStatus();});$('customWords').addEventListener('input',updateBankStatus);$('generate').addEventListener('click',generate);$('toggleTarget').addEventListener('click',toggleTarget);$('surprise').addEventListener('click',()=>{$('game').selectedIndex=Math.floor(Math.random()*games.length);$('difficulty').selectedIndex=Math.floor(Math.random()*3);if($('focus').value==='custom'&&!getBankItems().length){$('focus').value='general';$('customWrap').classList.add('hidden');}generate();});$('copy').addEventListener('click',async()=>{await navigator.clipboard.writeText($('prompt').innerText);$('copy').textContent='Copied!';setTimeout(()=>$('copy').textContent='Copy classroom prompt',1000);});$('reveal').addEventListener('click',()=>$('details').classList.toggle('hidden'));
-
-function generate(){
-  const game=$('game').value,diff=$('difficulty').value,focus=$('focus').value;const items=getBankItems();if(!items.length){$('prompt').textContent='Add some words to your custom word bank first.';$('details').textContent='';setTarget('');return;}
-  let prompt='',detail='',target='',targetHelp='This is separate from the classroom prompt so it can be hidden when needed.';const item=pick(items);const word=item.term;
-  switch(game){
-    case'lastLetter':target=word;if(diff==='easy'){prompt=`Start with “${word}”. Continue the chain using the final letter each time.`;detail='Any valid word is allowed. No repeats.';}if(diff==='medium'){const cat=pick(getCategories());prompt=`Last-Letter Chain — category: ${cat}. Start with “${word}”.`;detail='Every new word must fit the category or word-class constraint.';}if(diff==='hard'){prompt=`Last-Letter Chain — start with “${word}”. After each word, define it, use it accurately, or explain its connotations.`;detail='Require a brief explanation before the next turn.';}break;
-    case'alphabet':{const cat=pick(getCategories());target=cat;if(diff==='easy'){prompt=`Alphabet Categories: ${cat}. Start at A and find one valid answer for each letter.`;detail='Skip impossible letters if needed.';}if(diff==='medium'){prompt=`Alphabet Categories — ${cat}. Work through a selected letter range.`;detail='Answers must genuinely fit the category.';}if(diff==='hard'){prompt=`Alphabet Categories: ${cat}. Every answer must be justified with an example, sentence or textual connection.`;detail='The justification matters more than speed.';}break;}
-    case'startEnd':{let w=word;let c=lettersFor(w);if(c.length<3){w=pick(banks.general);c=lettersFor(w)}const first=c[0].toUpperCase(),last=c[c.length-1].toUpperCase();target=`${first} → ${last}`;if(diff==='easy'){prompt=`Find any valid word beginning with ${first} and ending with ${last}.`;detail=`One guaranteed example is “${w}”.`;}if(diff==='medium'){prompt=`Find the longest word you can beginning with ${first} and ending with ${last}. Be ready to spell or define it.`;detail=`One guaranteed example is “${w}”.`;}if(diff==='hard'){prompt=`Find a curriculum-relevant word beginning with ${first} and ending with ${last}, then use it accurately.`;detail=`One guaranteed example is “${w}”. Add a semantic or word-class constraint if useful.`;}break;}
-    case'wordReveal':{target=word;targetHelp='Teacher answer only. Hide this before students see the Word Reveal prompt.';const pattern=wordPattern(word);const clue=clueFor(item);if(diff==='easy'){prompt=`WORD REVEAL\n${pattern}\n\nIdentify the word or term.`;detail=`Structure hint: ${structureHint(word)}.`;}if(diff==='medium'){prompt=clue?`WORD REVEAL\n${pattern}\n\nClue: ${clue}`:`WORD REVEAL\n${pattern}\n\nStructure hint: ${structureHint(word)}.`;detail=clue?'Students identify the term from the pattern and clue.':'No semantic clue is stored for this custom term. Add one as: term | clue if you want the generator to supply a definition/context clue.';}if(diff==='hard'){if(clue){prompt=`WORD REVEAL\nClue: ${clue}\n\nIdentify the term, then define it accurately and explain how it could matter in English analysis or writing.`;detail=`Optional extra support if needed: ${pattern}`;}else{prompt=`WORD REVEAL\n${pattern}\n\nIdentify the term, then define it accurately and explain its relevance to the current unit or text.`;detail='This custom term has no stored clue. For a true clue-based Hard round, enter it as: term | clue.';}}break;}
-    case'letterBank':{const letters=sample('AAABCDEEEFGHIIJKLMNOOPQRSTTUVWY'.split(''),10).join(' ');target=letters;if(diff==='easy'){prompt=`Letter Bank: ${letters}\nMake as many valid words as you can in one minute.`;detail='Score by number of valid words or longest word.';}if(diff==='medium'){prompt=`Letter Bank: ${letters}\nBuild words that match this focus: ${pick(getCategories())}.`;detail='Ask students to identify word class, root, prefix or suffix where relevant.';}if(diff==='hard'){prompt=`Letter Bank: ${letters}\nBuild the strongest academic or text-relevant word you can, then use it in an accurate sentence.`;detail='Quality beats quantity.';}break;}
-    case'wordTennis':{const cat=pick(getCategories());target=cat;if(diff==='easy'){prompt=`Word Tennis: alternate valid words in the category “${cat}”. No repeats.`;detail='Keep the rhythm brisk.';}if(diff==='medium'){prompt=`Word Tennis: alternate English terms in “${cat}”. No repeats.`;detail='Pause only to verify doubtful answers.';}if(diff==='hard'){prompt=`Word Tennis: every answer in “${cat}” must also include one accurate use, example or effect.`;detail='Teams can confer briefly.';}break;}
-    case'oddOneOut':{let words=sample(items.map(i=>i.term),4);while(words.length<4)words.push(...sample(banks.general,4-words.length));target=words.join(' • ');prompt=`Odd One Out: ${words.join(' • ')}\nWhich one is different? Defend your reasoning.`;detail=diff==='easy'?'Aim for one fairly obvious distinction.':diff==='medium'?'Look for a meaningful shared category and one partial mismatch.':'Multiple answers may be defensible if justified with evidence.';break;}
-    case'mysteryWord':target=word;targetHelp='Let the class see this while the guesser is turned away, then hide it before the guesser turns back.';if(diff==='easy'){prompt='MYSTERY WORD\nGive one clue per student until the guesser identifies the word. Use clear, simple distinguishing features.';detail='No saying, spelling, rhyming or repeating clues.';}if(diff==='medium'){prompt='MYSTERY WORD\nGive one clue per student. Move from broad category clues towards precise distinguishing features.';detail='No saying, spelling, rhyming or repeating clues. The teacher can reject a giveaway clue.';}if(diff==='hard'){prompt='MYSTERY WORD\nEach clue must demonstrate genuine understanding of the term. After the guess, ask the class to refine the strongest and weakest clues.';detail='Use concepts, representations, perspectives, stylistic devices, genre conventions or other current unit terms.';}break;
-    case'sentenceStretch':{const s=pick(plainSentences);target=s;if(diff==='easy'){prompt=`Sentence Stretch: ${s}\nAdd one useful adjective, adverb or detail per turn.`;detail='Keep the sentence grammatical.';}if(diff==='medium'){prompt=`Sentence Stretch: ${s}\nAdd clauses, phrases, punctuation or imagery one move at a time.`;detail='After each move, name what changed.';}if(diff==='hard'){prompt=`Sentence Stretch: ${s}\nReshape voice, tone, pace, viewpoint or stylistic effect one deliberate move at a time.`;detail='Every change must serve a purpose.';}break;}
-    case'oneWordStory':{const constraint=pick(storyConstraints[diff]);target=constraint;prompt=`One-Word Story: ${constraint}`;detail='Move in a predetermined order. Each student contributes exactly one word. Stop and repair grammar or cohesion if needed.';break;}
-  }
-  setTarget(target,'Teacher / class target',targetHelp);$('prompt').textContent=prompt;$('details').textContent=detail;$('details').classList.add('hidden');$('gameTag').textContent=$('game').selectedOptions[0].text;$('difficultyTag').textContent=labels[diff];$('focusTag').textContent=$('focus').selectedOptions[0].text;updateBankStatus();
-}
-
-$('game').value='wordReveal';$('difficulty').value='hard';$('focus').value='custom';$('customWrap').classList.remove('hidden');$('customWords').value='tension\nsuspense\nprotagonist\nantagonist\nrelationship\nconflict\ntone\ndiction';updateBankStatus();generate();
-</script>
+      <div class="game-grid" id="gameCards" aria-label="Choose from ten games"></div>
+    </section>
+    <section id="gameView" hidden aria-labelledby="gameTitle">
+      <nav class="game-nav" aria-label="Game navigation"><a class="button secondary" href="#">&#8592; All games</a><button class="button secondary" id="project" type="button" disabled>Project prompt</button></nav>
+      <div class="game-heading"><div class="game-art" id="selectedArt" aria-hidden="true"></div><div><h1 id="gameTitle" tabindex="-1"></h1><p id="gameDescription"></p></div></div>
+      <details class="rules"><summary>How to play</summary><ol id="gameRules"></ol></details>
+      <section class="setup panel" aria-labelledby="setupTitle">
+        <h2 id="setupTitle">Set up your round</h2>
+        <div class="control-grid">
+          <div><label for="difficulty">Difficulty</label><select id="difficulty"><option value="easy">Easy - retrieve</option><option value="medium">Medium - classify / understand</option><option value="hard">Hard - explain / apply</option></select></div>
+          <div><label for="focus">English focus</label><select id="focus"><option value="general">General vocabulary</option><option value="grammar">Grammar / word classes</option><option value="persuasive">Persuasive language</option><option value="literary">Literary devices</option><option value="analytical">Analytical vocabulary</option><option value="creative">Creative writing</option><option value="textstudy">Text study</option><option value="custom">My own word bank</option></select></div>
+        </div>
+        <div id="customWrap" hidden>
+          <label for="customWords">Custom word bank</label>
+          <textarea id="customWords" rows="5" placeholder="One term per line. Optional: term | clue" aria-describedby="bankHelp bankStatus"></textarea>
+          <p class="help" id="bankHelp">For Word Reveal, add a clue after a vertical bar: <code>mentor | a guide who offers advice, knowledge or support</code>. Your bank stays here while you switch games; it is cleared when you reload or close this page.</p>
+          <p class="bank-status" id="bankStatus" aria-live="polite"></p>
+        </div>
+        <div class="actions"><button class="button primary" id="generate" type="button">Generate round</button><span class="status" id="status" role="status"></span></div>
+      </section>
+      <section class="round panel" id="roundPanel" hidden aria-labelledby="roundTitle">
+        <div class="round-heading"><h2 id="roundTitle">Classroom prompt</h2><span class="round-meta" id="roundMeta"></span></div>
+        <p class="notice" id="roundNotice" hidden></p>
+        <div id="prompt" class="prompt" tabindex="-1"></div>
+        <div class="actions"><button class="button secondary" id="copy" type="button">Copy classroom prompt</button><button class="button secondary" id="showSupport" type="button" aria-expanded="false" aria-controls="support">Show extra support</button></div>
+        <div class="support" id="support" hidden></div>
+        <section class="target" id="targetPanel" hidden aria-labelledby="targetLabel">
+          <div><h3 id="targetLabel">Teacher answer</h3><p class="help" id="targetHelp"></p></div>
+          <button class="button secondary" id="toggleTarget" type="button" aria-expanded="false" aria-controls="targetWord">Show answer</button>
+          <p class="target-word" id="targetWord" hidden></p>
+        </section>
+      </section>
+    </section>
+  </main>
+  <footer>Created by Mrs Knox</footer>
+</div>
+<dialog id="projection" aria-labelledby="projectionTitle">
+  <div class="projection-top"><h2 id="projectionTitle"></h2><button class="button secondary" id="closeProjection" type="button">Exit projection</button></div>
+  <div id="projectionPrompt" class="projection-prompt"></div>
+  <p id="projectionAnswer" class="projection-answer" hidden></p>
+  <div class="actions"><button class="button primary" id="nextProjected" type="button">Next round</button><button class="button secondary" id="revealProjected" type="button">Show answer</button></div>
+  <p class="projection-credit">Created by Mrs Knox</p>
+</dialog>
+<noscript><p class="panel">Please enable JavaScript to use the game generator.</p></noscript>
 </body>
 </html>
