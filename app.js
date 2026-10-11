@@ -43,6 +43,7 @@ let selectedGame = null;
 let currentRound = null;
 let answerVisible = false;
 let projectedAnswerVisible = false;
+let activeClue = '';
 let previousTerm = '';
 const previousOddSets = new Map();
 const pick = values => values[Math.floor(Math.random() * values.length)];
@@ -144,7 +145,11 @@ function updateBank() {
   $('bankStatus').textContent=`${items.length} unique terms loaded`+(selectedGame?.id==='wordReveal'?`; ${items.filter(x=>clueFor(x)).length} have clues for Word Reveal.`:'.');
 }
 function clearRound() {
-  currentRound=null; answerVisible=false;
+  currentRound=null; answerVisible=false; activeClue='';
+  $('teacherReference').hidden=true; $('teacherReference').open=false;
+  $('teacherReferenceContent').replaceChildren();
+  $('studentClue').hidden=true; $('studentClue').textContent='';
+  $('projectionClue').hidden=true; $('projectionClue').textContent='';
   $('roundPanel').hidden=true; $('project').disabled=true;
   $('targetWord').textContent=''; $('targetWord').hidden=true;
   $('support').textContent=''; $('support').hidden=true;
@@ -206,7 +211,7 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
     }
     if(!category)category=pick(categoryPools[focus]||categoryPools.general);
   }
-  let prompt='',detail='',target='',secret=false,notice='',meta='';
+  let prompt='',detail='',target='',secret=false,notice='',meta='',teacher=null;
   if(c.bank)meta=bankNames[focus]||focus;
   if(c.level)meta=[levelOptions[c.level].values.find(x=>x[0]===difficulty)[1],meta].filter(Boolean).join(' / ');
   if(c.category)meta=category;
@@ -223,6 +228,7 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
       }
       prompt=`Category: ${category}\n\n${range}\nGive one valid answer for each letter.`;
 
+      teacher={type:'alphabet',...window.TEACHER_SUPPORT.alphabetSuggestions(category,focus==='custom'?items:[])};
       detail='Use the category as the constraint. Teachers decide which answers fit. For extra challenge, ask for a definition, sentence or textual connection. The generator does not mark responses.';
       break;
     }
@@ -247,12 +253,13 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
     case 'letterBank': {
       const count=Number(options.letterCount??10);
       if(![8,9,10].includes(count))throw new Error('Choose a bank of 8, 9 or 10 letters.');
-      const pool=randomWords.filter(w=>w.length>=5&&w.length<=count&&w!==previousSeed);
-      const seed=pick(pool);previousSeed=seed;
+      const bank=window.TEACHER_SUPPORT.makeLetterBank(count,previousSeed);
+      const seed=bank.seed;previousSeed=seed;
       const tiles=seed.toUpperCase().split('');
-      while(tiles.length<count)tiles.push(pick('AAEEIIOOUSTRN'.split('')));
-      prompt=`${shuffle(tiles).join('  ')}\n\nMake as many valid words as you can, or find the longest word.\nUse each tile only once per word. Reset the tiles for the next word.`;
-      target=seed;meta=count+' letters';detail='Allow about one minute. The tiles contain at least one familiar word, shown under Teacher example, but it is not necessarily the longest. Agree whether to score the most words or the longest word before playing.';
+      prompt=`${shuffle(tiles).join('  ')}\n\nMake as many valid words as you can, or find the longest word.\nUse words of at least two letters. Use each tile only once per word. Reset the tiles for the next word.`;
+      target=seed;meta=count+' letters';
+      teacher={type:'letterBank',...bank};
+      detail='Allow about one minute. Every bank contains a word that uses all the tiles. Open Teacher reference for all matching words in the built-in dictionary, grouped by length, and clues to read aloud. Agree whether to score the most words or the longest word before playing.';
       break;
     }
     case 'wordTennis':
@@ -307,7 +314,49 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
     }
     default: throw new Error('Choose a game from the home page.');
   }
-  return {gameId,difficulty,focus,prompt,detail,target,secret,notice,meta};
+  return {gameId,difficulty,focus,prompt,detail,target,secret,notice,meta,teacher};
+}
+function renderTeacherReference() {
+  const panel=$('teacherReference'),content=$('teacherReferenceContent'),ref=currentRound?.teacher;
+  panel.hidden=!ref;panel.open=false;content.replaceChildren();
+  if(!ref)return;
+  const add=(tag,text,parent=content)=>{const el=document.createElement(tag);el.textContent=text;parent.append(el);return el;};
+  const link=(text,url,parent)=>{const a=add('a',text,parent);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;};
+  if(ref.type==='alphabet') {
+    add('p',ref.note);
+    if(['literary devices','language features','persuasive techniques'].includes(currentRound.meta))link('LitCharts: literary devices and terms','https://www.litcharts.com/literary-devices-and-terms',content);
+    if(!ref.groups.some(group=>group.terms.length))return;
+    const table=add('table','');table.className='teacher-table';
+    add('caption','Suggested answers by starting letter',table);
+    const head=add('tr','',add('thead','',table));
+    for(const title of ['Letter','Suggested answers']){const th=add('th',title,head);th.scope='col';}
+    const body=add('tbody','',table);
+    for(const group of ref.groups){
+      const row=add('tr','',body),th=add('th',group.letter,row);th.scope='row';
+      const cell=add('td','',row);
+      if(!group.terms.length)add('span','No stored example — skip or invite suggestions.',cell);
+      group.terms.forEach((item,i)=>{if(i)add('span','; ',cell);if(item.url)link(item.term+' ↗',item.url,cell);else add('span',item.term,cell);});
+    }
+  } else {
+    add('h3','Clues you can read aloud');
+    add('p','Start with the meaning clue. If students need more help, offer the first letter. “Use clue” shows only the clue in the classroom view and projection mode.');
+    const hints=add('div','');hints.className='teacher-hints';
+    for(const hint of ref.hints){
+      const card=add('div','',hints);card.className='teacher-hint';
+      add('strong',hint.word+' — '+hint.length+' letters',card);
+      add('p',hint.clue,card);
+      add('p','Extra help: starts with '+hint.initial+'.',card);
+      const button=add('button','Use clue',card);button.type='button';button.className='button secondary';
+      button.addEventListener('click',()=>{activeClue=hint.clue;$('studentClue').textContent=activeClue;$('studentClue').hidden=false;$('projectionClue').textContent=activeClue;$('projectionClue').hidden=false;});
+    }
+    const hide=add('button','Hide classroom clue');hide.type='button';hide.className='button secondary';
+    hide.addEventListener('click',()=>{activeClue='';for(const id of ['studentClue','projectionClue']){$(id).hidden=true;$(id).textContent='';}});
+    add('h3',ref.words.length+' matching words');
+    add('p','All matches in the built-in dictionary (2+ letters), including plurals and less familiar words. Selected Australian spellings are included. This is a cross-checking aid: accept other valid words after checking a dictionary, and agree which unfamiliar words count. Common profanity and slurs are omitted.');
+    const groups=new Map();for(const word of ref.words){if(!groups.has(word.length))groups.set(word.length,[]);groups.get(word.length).push(word);}
+    for(const [length,words] of groups){add('h4',length+' letters ('+words.length+')');const list=add('p',words.join(', '));list.className='teacher-word-list';}
+    link('Word-list source and credits','https://github.com/dolph/dictionary',content);
+  }
 }
 function answerLabel() {return currentRound?.gameId==='oddOneOut'?'reasoning':'answer';}
 function generateRound() {
@@ -315,7 +364,9 @@ function generateRound() {
   try {
     const settings=roundSettings();
     currentRound=buildRound(selectedGame.id,settings.difficulty,settings.focus,settings.items,settings.options);
-    answerVisible=false;
+    answerVisible=false; activeClue='';
+    $('studentClue').hidden=true; $('studentClue').textContent='';
+    renderTeacherReference();
     $('prompt').textContent=currentRound.prompt;
     $('support').textContent=currentRound.detail;$('support').hidden=true;
     $('showSupport').textContent='Show extra support';$('showSupport').setAttribute('aria-expanded','false');
@@ -356,6 +407,7 @@ function renderProjection() {
   if(!currentRound)return;
   projectedAnswerVisible=false;
   $('projectionTitle').textContent=selectedGame.name;
+  $('projectionClue').textContent=activeClue;$('projectionClue').hidden=!activeClue;
   $('projectionPrompt').textContent=currentRound.prompt;
   $('projectionAnswer').textContent='';$('projectionAnswer').hidden=true;
   $('projectionAnswer').style.whiteSpace='pre-wrap';

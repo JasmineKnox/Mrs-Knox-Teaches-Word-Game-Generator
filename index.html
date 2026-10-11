@@ -4,14 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Ten low-prep classroom word games. Choose a game and generate a classroom round with Mrs Knox Teaches.">
-  <meta name="application-version" content="2026-09-15-game-settings2">
+  <meta name="application-version" content="2026-10-12-teacher-support">
   <title>Word Game Generator | Mrs Knox Teaches</title>
-  <link rel="stylesheet" href="styles.css?v=20260915-controls2">
-  <link rel="stylesheet" href="settings.css?v=20260915-controls2">
-  <script defer src="data.js?v=20260915-controls2"></script>
-  <script defer src="word-clues.js?v=20260915-controls2"></script>
-  <script defer src="odd-one-out.js?v=20260915-controls2"></script>
-  <script defer src="app.js?v=20260915-controls2"></script>
+  <link rel="stylesheet" href="styles.css?v=20261012-teacher-support">
+  <link rel="stylesheet" href="settings.css?v=20261012-teacher-support">
+  <script defer src="data.js?v=20261012-teacher-support"></script>
+  <script defer src="word-clues.js?v=20261012-teacher-support"></script>
+  <script defer src="odd-one-out.js?v=20261012-teacher-support"></script>
+  <script defer src="letter-dictionary.js?v=20261012-teacher-support"></script>
+  <script defer src="literary-links.js?v=20261012-teacher-support"></script>
+  <script defer src="teacher-support.js?v=20261012-teacher-support"></script>
+  <script defer src="app.js?v=20261012-teacher-support"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to games</a>
@@ -55,6 +58,12 @@
         <div id="prompt" class="prompt" tabindex="-1"></div>
         <div class="actions"><button class="button secondary" id="copy" type="button">Copy classroom prompt</button><button class="button secondary" id="showSupport" type="button" aria-expanded="false" aria-controls="support">Show extra support</button></div>
         <div class="support" id="support" hidden></div>
+        <p id="studentClue" class="notice" hidden></p>
+        <details id="teacherReference" class="teacher-reference" hidden>
+          <summary>Teacher reference — suggestions, words and clues</summary>
+          <p class="help">Keep this closed while sharing your screen. It is excluded from projection mode and copied classroom prompts.</p>
+          <div id="teacherReferenceContent"></div>
+        </details>
         <section class="target" id="targetPanel" hidden aria-labelledby="targetLabel">
           <div><h3 id="targetLabel">Teacher answer</h3><p class="help" id="targetHelp"></p></div>
           <button class="button secondary" id="toggleTarget" type="button" aria-expanded="false" aria-controls="targetWord">Show answer</button>
@@ -68,6 +77,7 @@
 <dialog id="projection" aria-labelledby="projectionTitle">
   <div class="projection-top"><h2 id="projectionTitle"></h2><button class="button secondary" id="closeProjection" type="button">Exit projection</button></div>
   <div id="projectionPrompt" class="projection-prompt"></div>
+  <p id="projectionClue" class="projection-clue" hidden></p>
   <p id="projectionAnswer" class="projection-answer" hidden></p>
   <div class="actions"><button class="button primary" id="nextProjected" type="button">Next round</button><button class="button secondary" id="revealProjected" type="button">Show answer</button></div>
   <p class="projection-credit">Created by Mrs Knox</p>

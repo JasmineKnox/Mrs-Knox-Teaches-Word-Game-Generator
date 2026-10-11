@@ -7,7 +7,7 @@ function node(){return {children:[],style:{},value:'general',textContent:'',clas
 const el=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)};
 const context={console,location:{hash:''},document:{getElementById:el,createElement:node,querySelector:()=>node()},addEventListener(){},scrollTo(){}};
 context.window=context;vm.createContext(context);
-for(const file of ['data.js','word-clues.js','odd-one-out.js','app.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
+for(const file of ['data.js','word-clues.js','odd-one-out.js','letter-dictionary.js','literary-links.js','teacher-support.js','app.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
 const D=context.GAME_DATA,W=context.WordGames;
 assert.equal(el('gameCards').children.length,10);
 for(const word of ['assumption','perspective','representation','value','belief']){assert(!D.banks.analytical.includes(word));assert(D.banks.textstudy.includes(word));}
