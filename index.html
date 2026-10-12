@@ -4,17 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Ten low-prep classroom word games. Choose a game and generate a classroom round with Mrs Knox Teaches.">
-  <meta name="application-version" content="2026-10-12-teacher-support">
+  <meta name="application-version" content="2026-10-12-writing-scaffolds">
   <title>Word Game Generator | Mrs Knox Teaches</title>
-  <link rel="stylesheet" href="styles.css?v=20261012-teacher-support">
-  <link rel="stylesheet" href="settings.css?v=20261012-teacher-support">
-  <script defer src="data.js?v=20261012-teacher-support"></script>
-  <script defer src="word-clues.js?v=20261012-teacher-support"></script>
-  <script defer src="odd-one-out.js?v=20261012-teacher-support"></script>
-  <script defer src="letter-dictionary.js?v=20261012-teacher-support"></script>
-  <script defer src="literary-links.js?v=20261012-teacher-support"></script>
-  <script defer src="teacher-support.js?v=20261012-teacher-support"></script>
-  <script defer src="app.js?v=20261012-teacher-support"></script>
+  <link rel="stylesheet" href="styles.css?v=20261012-writing-scaffolds">
+  <link rel="stylesheet" href="settings.css?v=20261012-writing-scaffolds">
+  <script defer src="data.js?v=20261012-writing-scaffolds"></script>
+  <script defer src="word-clues.js?v=20261012-writing-scaffolds"></script>
+  <script defer src="odd-one-out.js?v=20261012-writing-scaffolds"></script>
+  <script defer src="letter-dictionary.js?v=20261012-writing-scaffolds"></script>
+  <script defer src="literary-links.js?v=20261012-writing-scaffolds"></script>
+  <script defer src="teacher-support.js?v=20261012-writing-scaffolds"></script>
+  <script defer src="writing-prompts.js?v=20261012-writing-scaffolds"></script>
+  <script defer src="app.js?v=20261012-writing-scaffolds"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to games</a>
@@ -40,6 +41,11 @@
           <div id="categoryControl" hidden><label for="category">Category</label><select id="category" disabled></select></div>
           <div id="letterCountControl" hidden><label for="letterCount">Number of letters</label><select id="letterCount" disabled><option value="8">8 letters</option><option value="9">9 letters</option><option value="10" selected>10 letters</option></select></div>
           <div id="sentenceControl" hidden><label for="sentenceInput">Starting sentence (optional)</label><input id="sentenceInput" type="text" maxlength="500" placeholder="Leave blank for a generated sentence" disabled></div>
+          <div id="sentenceGoalControl" hidden><label for="sentenceGoal">Effect to aim for</label><select id="sentenceGoal" disabled><option value="none">No added goal</option><option value="random">Choose a goal for me</option><option value="custom">My own goal</option></select></div>
+          <div id="customGoalControl" hidden><label for="customGoal">Your writing goal</label><input id="customGoal" type="text" maxlength="300" placeholder="e.g. Make the ordinary room seem threatening" disabled></div>
+          <div id="storyModeControl" hidden><label for="storyMode">Story option</label><select id="storyMode" disabled><option value="original">Invent a story</option><option value="retell">Retell a well-known story</option><option value="scaffold">Random setting, character and problem</option></select></div>
+          <div id="retellingControl" hidden><label for="retelling">Story to retell</label><select id="retelling" disabled><option value="random">Choose a story for me</option><option value="custom">My own well-known story</option></select></div>
+          <div id="customStoryControl" hidden><label for="customStory">Story title</label><input id="customStory" type="text" maxlength="200" placeholder="Enter a story your class knows" disabled></div>
           <div id="storyControl" hidden><label for="storyConstraint">Story constraint</label><select id="storyConstraint" disabled><option value="none">No added constraint</option><option value="random">Choose a constraint for me</option></select></div>
         </div>
         <div id="customWrap" hidden>

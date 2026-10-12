@@ -13,7 +13,7 @@ const games = [
   {id:'oddOneOut',name:'Odd One Out',description:'Choose a different item and defend your reasoning.',rules:['Show four items and give everyone thinking time.','Choose an odd one out and explain the distinction.','Accept more than one answer when the reasoning is accurate.','Built-in sets have suggested reasoning. Custom banks make open-ended sets that need a teacher check.']},
   {id:'mysteryWord',name:'Mystery Word',description:'Give one clue each until the guesser identifies the word.',rules:['Turn the guesser away. Show the target to the class, then hide it.','In a set order, give one clue each. Do not say, spell or rhyme with the word, or repeat clues.','The guesser can guess after each clue. The teacher checks doubtful clues.','Optional Forbidden Word: in pairs, ban several obvious associated words as well.']},
   {id:'sentenceStretch',name:'Sentence Stretch',description:'Improve a plain sentence one deliberate change at a time.',rules:['Keep the starting sentence visible.','Take turns adding or changing one element. Keep it grammatical.','Explain what changed and how it affects meaning. Longer is not automatically better.']},
-  {id:'oneWordStory',name:'One-Word Story',description:'Build a coherent story with one word from each student.',rules:['Take turns in a set order. Each person contributes exactly one word.','Listen and keep the story grammatical, coherent and classroom-safe.','Pause to repair a sentence when needed. Keep rounds short.']}
+  {id:'oneWordStory',name:'One-Word Story',description:'Build a coherent story with one word from each student.',rules:['Invent a story, retell a familiar one, or use a generated setting, character and problem.','Take turns in a set order. Each person contributes exactly one word.','Listen and keep the story grammatical, coherent and classroom-safe.','Pause to repair a sentence when needed. Keep rounds short.']}
 ];
 // Each game exposes only settings that affect its round. Hidden choices are ignored.
 const controls = {
@@ -35,6 +35,8 @@ const levelOptions={
   writing:{label:'Change to practise',values:[['easy','Vocabulary and detail'],['medium','Clauses, punctuation and imagery'],['hard','Voice, tone and pace']]}
 };
 const randomWords='garden forest planet window river pencil rabbit kitten silver winter summer basket orange purple school teacher reading learning writing painting rainbow thunder journey blanket candle feather shadow whisper cricket captain picture holiday shelter mountain waterfall triangle question puzzle ticket pocket lantern horizon meadow ocean notebook adventure discovery freedom'.split(' ');
+const writing=window.WRITING_PROMPTS;
+const retellings=[...writing.fairyTales,...writing.fables];
 const storyChoices=[...new Set([...storyConstraints.medium,...storyConstraints.hard])];
 let previousPair='';
 let previousSeed='';
@@ -85,7 +87,7 @@ function configureControls() {
   setField('categoryControl','category',Boolean(c.category));
   setField('letterCountControl','letterCount',Boolean(c.letters));
   setField('sentenceControl','sentenceInput',Boolean(c.sentence));
-  setField('storyControl','storyConstraint',Boolean(c.story));
+  updateWritingControls();
   if(c.level) {
     const spec=levelOptions[c.level],old=$('difficulty').value;
     $('difficultyLabel').textContent=spec.label;
@@ -95,12 +97,23 @@ function configureControls() {
   $('focusLabel').textContent=c.bankLabel||'Word bank';
   $('setupTitle').textContent=selectedGame?.id==='startEnd'?'Generate a letter pair':'Set up your round';
   $('generate').textContent=({startEnd:'Generate letter pair',letterBank:'Generate letters',lastLetter:'Generate starting word'}[selectedGame?.id]||'Generate round');
-  const visible=Object.values(c).filter(x=>x===true).length+(c.level?1:0);
+  const visible=Object.values(c).filter(x=>x===true).length+(c.level?1:0)+(c.story||c.sentence?1:0);
   $('controlGrid').classList.toggle('single-control',visible<=1);
   $('controlGrid').hidden=visible===0;
   updateBank();
 }
+function updateWritingControls() {
+  const c=selectedControls(),mode=$('storyMode').value;
+  setField('sentenceGoalControl','sentenceGoal',Boolean(c.sentence));
+  setField('customGoalControl','customGoal',Boolean(c.sentence&&$('sentenceGoal').value==='custom'));
+  setField('storyModeControl','storyMode',Boolean(c.story));
+  setField('storyControl','storyConstraint',Boolean(c.story&&mode==='original'));
+  setField('retellingControl','retelling',Boolean(c.story&&mode==='retell'));
+  setField('customStoryControl','customStory',Boolean(c.story&&mode==='retell'&&$('retelling').value==='custom'));
+}
 function populateGameOptions() {
+  for(const goal of writing.goals){const option=document.createElement('option');option.value=goal.id;option.textContent=goal.label;$('sentenceGoal').append(option);}
+  for(const [label,titles] of [['Fairy tales',writing.fairyTales],['Fables',writing.fables]]){const group=document.createElement('optgroup');group.label=label;for(const title of titles){const option=document.createElement('option');option.value=title;option.textContent=title;group.append(option);}$('retelling').append(group);}
   const seen=new Set();
   for(const [focus,categories] of Object.entries(categoryPools)) {
     const group=document.createElement('optgroup');group.label=bankNames[focus];
@@ -122,8 +135,8 @@ function roundSettings() {
   if(c.category && $('category').value==='custom')focus='custom';
   const options={};
   if(c.letters)options.letterCount=Number($('letterCount').value);
-  if(c.sentence)options.sentence=$('sentenceInput').value.trim();
-  if(c.story)options.storyConstraint=$('storyConstraint').value;
+  if(c.sentence){options.sentence=$('sentenceInput').value.trim();options.sentenceGoal=$('sentenceGoal').value;options.customGoal=$('customGoal').value.trim();}
+  if(c.story){options.storyMode=$('storyMode').value;if(options.storyMode==='original')options.storyConstraint=$('storyConstraint').value;if(options.storyMode==='retell'){options.retelling=$('retelling').value;options.customStory=$('customStory').value.trim();}}
   if(c.category)options.category=$('category').value==='custom'?$('customCategory').value.trim():$('category').value;
   const items=(c.bank||(c.category&&focus==='custom'))?bankItems(focus):[];
   return {difficulty,focus,items,options};
@@ -297,19 +310,43 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
       detail='Turn the guesser away before showing the target to the class. Hide it again before the guesser turns back. Start with a broad category, then give precise distinguishing features. The teacher can reject a giveaway clue.\n\nForbidden Word variation: work in pairs and agree extra associated words the clue-giver cannot use.';
       break;
     case 'sentenceStretch': {
-      const sentence=String(options.sentence||'').trim()||pick(plainSentences);
+      const goalChoice=options.sentenceGoal||'none';
+      let goal=null;
+      if(goalChoice==='random')goal=pick(writing.goals);
+      else if(goalChoice==='custom'){const label=String(options.customGoal||'').trim();if(!label)throw new Error('Enter your writing goal, then generate a round.');goal={label,tip:'Choose language and sentence structures that help the reader infer your intended effect.'};}
+      else if(goalChoice!=='none'){goal=writing.goals.find(g=>g.id===goalChoice);if(!goal)throw new Error('Choose a writing goal from the menu.');}
+      const sentence=String(options.sentence||'').trim()||pick(goal?.character?writing.characterSentences:plainSentences);
       prompt=sentence+'\n\n'+({easy:'Add one useful adjective, adverb or detail per turn.',medium:'Add or change a clause, phrase, punctuation choice or image per turn.',hard:'Reshape the voice, tone, pace, viewpoint or stylistic effect one deliberate change at a time.'}[difficulty]);
+      if(goal)prompt=sentence+'\n\nYour goal: '+goal.label+'.\n\n'+prompt.slice(sentence.length+2);
       prompt+=' Keep the sentence grammatical.';
-      detail='Keep the original sentence visible. Name what changed and why it works. Longer is not automatically better.';
+      if(goal){prompt+=' After each change, explain how it helps create the intended effect.';meta+=' / '+goal.label;}
+      detail='Keep the original sentence visible. Name what changed and why it works. Longer is not automatically better.'+(goal?'\n\n'+goal.tip:'');
       break;
     }
     case 'oneWordStory': {
-      const choice=options.storyConstraint||'none';
-      const constraint=choice==='random'?pick(storyChoices):choice;
-      if(constraint!=='none'&&!storyChoices.includes(constraint))throw new Error('Choose a story constraint from the menu.');
-      prompt=(constraint==='none'?'Build a coherent classroom-safe story.':'Constraint: '+constraint+'.')+'\n\nContribute exactly one word per person. Listen carefully and keep the story grammatical and coherent.';
-      detail='Use a set order. Keep the story classroom-safe. Pause to repair grammar or cohesion, then continue. End the round before it becomes random.';
-      meta=constraint==='none'?'No added constraint':constraint;
+      const mode=options.storyMode||'original';
+      const routine='Contribute exactly one word per person. Listen carefully and keep the story grammatical and coherent.';
+      if(mode==='retell') {
+        const choice=options.retelling||'random';
+        const title=choice==='random'?pick(retellings):choice==='custom'?String(options.customStory||'').trim():choice;
+        if(!title)throw new Error('Enter the story title, then generate a round.');
+        if(choice!=='custom'&&!retellings.includes(title))throw new Error('Choose a story from the menu.');
+        prompt='Retell: '+title+'\n\nTell the familiar story together, one word at a time. Keep its main characters and key events recognisable.\n\n'+routine;
+        meta='Retell a well-known story';
+        detail='Briefly agree which version your class knows and recall its beginning, problem and ending before starting. You do not need the original wording. Keep the retelling classroom-safe and use a set turn order.';
+      } else if(mode==='scaffold') {
+        const setting=pick(writing.settings),character=pick(writing.characters),problem=pick(writing.problems);
+        prompt='Setting: '+setting+'\nMain character: '+character+'\nProblem: the main character '+problem+'.\n\nBuild a story using all three ideas. Start by introducing the character and setting, then let the problem develop.\n\n'+routine;
+        meta='Setting + character + problem';
+        detail='Read the three starting ideas together. Give students a short thinking pause, then use a set turn order. Keep the scaffold visible and pause if the story loses its connection to the problem. Generate another round for a new combination.';
+      } else if(mode==='original') {
+        const choice=options.storyConstraint||'none';
+        const constraint=choice==='random'?pick(storyChoices):choice;
+        if(constraint!=='none'&&!storyChoices.includes(constraint))throw new Error('Choose a story constraint from the menu.');
+        prompt=(constraint==='none'?'Build a coherent classroom-safe story.':'Constraint: '+constraint+'.')+'\n\n'+routine;
+        detail='Use a set order. Keep the story classroom-safe. Pause to repair grammar or cohesion, then continue. End the round before it becomes random.';
+        meta=constraint==='none'?'No added constraint':constraint;
+      } else throw new Error('Choose a story option from the menu.');
       break;
     }
     default: throw new Error('Choose a game from the home page.');
@@ -419,12 +456,12 @@ function openProjection() {
   if(!currentRound)return;
   renderProjection();$('projection').showModal();
 }
-function settingsChanged() {updateBank();clearRound();status('Settings changed. Generate a new round.');}
+function settingsChanged() {updateWritingControls();updateBank();clearRound();status('Settings changed. Generate a new round.');}
 $('difficulty').addEventListener('change',settingsChanged);
 $('focus').addEventListener('change',settingsChanged);
 $('customWords').addEventListener('input',settingsChanged);
-for(const id of ['category','letterCount','storyConstraint'])$(id).addEventListener('change',settingsChanged);
-for(const id of ['sentenceInput','customCategory'])$(id).addEventListener('input',settingsChanged);
+for(const id of ['category','letterCount','storyConstraint','storyMode','retelling','sentenceGoal'])$(id).addEventListener('change',settingsChanged);
+for(const id of ['sentenceInput','customCategory','customStory','customGoal'])$(id).addEventListener('input',settingsChanged);
 $('generate').addEventListener('click',generateRound);
 $('toggleTarget').addEventListener('click',toggleAnswer);
 $('copy').addEventListener('click',copyPrompt);

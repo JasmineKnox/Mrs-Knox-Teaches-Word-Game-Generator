@@ -5,7 +5,7 @@ const el=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)};
 let copied='';
 const context={console,location:{hash:''},navigator:{clipboard:{async writeText(s){copied=s}}},isSecureContext:true,document:{getElementById:el,createElement:node,querySelector:()=>node()},addEventListener(k,fn){events[k]=fn},scrollTo(){}};
 context.window=context;vm.createContext(context);
-for(const file of ['data.js','word-clues.js','odd-one-out.js','letter-dictionary.js','literary-links.js','teacher-support.js','app.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
+for(const file of ['data.js','word-clues.js','odd-one-out.js','letter-dictionary.js','literary-links.js','teacher-support.js','writing-prompts.js','app.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
 const T=context.TEACHER_SUPPORT,W=context.WordGames;
 assert(T.canBuild('letter','LETTERBANK'));assert(!T.canBuild('letter','LETRBANK'));assert(!T.canBuild('banana','BANAN'));
 const dict=context.LETTER_DICTIONARY;
@@ -25,6 +25,25 @@ for(const category of new Set(Object.values(context.GAME_DATA.categoryPools).fla
 }
 const literary=T.alphabetSuggestions('literary devices');assert(literary.groups.flatMap(g=>g.terms).every(x=>x.url));
 const custom=T.alphabetSuggestions('My text',[{term:'Victor Frankenstein'},{term:'Elizabeth Lavenza'}]);assert.equal(custom.groups[21].terms[0].term,'Victor Frankenstein');
+const writing=context.WRITING_PROMPTS;
+for(const title of [...writing.fairyTales,...writing.fables]){
+ const r=W.buildRound('oneWordStory','easy','general',[],{storyMode:'retell',retelling:title,storyConstraint:'BAD HIDDEN VALUE'});
+ assert(r.prompt.includes('Retell: '+title));assert(r.prompt.includes('exactly one word'));assert(!r.prompt.includes('BAD HIDDEN VALUE'));
+}
+assert(W.buildRound('oneWordStory','easy','general',[],{storyMode:'retell',retelling:'custom',customStory:'A class story'}).prompt.includes('Retell: A class story'));
+assert.throws(()=>W.buildRound('oneWordStory','easy','general',[],{storyMode:'retell',retelling:'custom',customStory:''}),/story title/);
+for(let i=0;i<20;i++){
+ const r=W.buildRound('oneWordStory','easy','general',[],{storyMode:'scaffold',storyConstraint:'BAD HIDDEN VALUE'});
+ assert(writing.settings.some(x=>r.prompt.includes('Setting: '+x)));assert(writing.characters.some(x=>r.prompt.includes('Main character: '+x)));assert(writing.problems.some(x=>r.prompt.includes(x)));assert(!r.prompt.includes('BAD HIDDEN VALUE'));
+}
+for(const goal of writing.goals){
+ const r=W.buildRound('sentenceStretch','medium','general',[],{sentenceGoal:goal.id});
+ assert(r.prompt.includes('Your goal: '+goal.label));assert(r.prompt.includes('explain how'));assert(r.detail.includes(goal.tip));
+ if(goal.character)assert(writing.characterSentences.some(x=>r.prompt.startsWith(x)));
+}
+assert(W.buildRound('sentenceStretch','easy','general',[],{sentence:'The character walked into the room.',sentenceGoal:'guilty'}).prompt.includes('Make the character seem guilty'));
+assert(W.buildRound('sentenceStretch','easy','general',[],{sentenceGoal:'custom',customGoal:'Make the room feel welcoming'}).prompt.includes('Make the room feel welcoming'));
+assert.throws(()=>W.buildRound('sentenceStretch','easy','general',[],{sentenceGoal:'custom'}),/writing goal/);
 const descendants=n=>[n,...n.children.flatMap(descendants)];
 (async()=>{
  context.location.hash='#game/letterBank';events.hashchange();el('letterCount').value='9';el('generate').listeners.click();
@@ -37,6 +56,16 @@ const descendants=n=>[n,...n.children.flatMap(descendants)];
  el('nextProjected').listeners.click();assert.equal(el('projectionClue').hidden,true);assert.equal(el('studentClue').hidden,true);assert.equal(el('teacherReference').open,false);
  context.location.hash='#game/alphabet';events.hashchange();el('category').value='literary devices';el('generate').listeners.click();
  const links=descendants(el('teacherReferenceContent')).filter(x=>x.tag==='a');assert(links.length>40);assert(links.some(x=>x.href.endsWith('/characterization')));
+ context.location.hash='#game/oneWordStory';el('storyMode').value='original';events.hashchange();
+ assert.equal(el('storyControl').hidden,false);assert.equal(el('retellingControl').hidden,true);
+ el('storyMode').value='retell';el('retelling').value='Cinderella';el('storyMode').listeners.change();
+ assert.equal(el('storyControl').hidden,true);assert.equal(el('storyConstraint').disabled,true);assert.equal(el('retellingControl').hidden,false);
+ el('generate').listeners.click();assert(el('prompt').textContent.includes('Retell: Cinderella'));
+ el('storyMode').value='scaffold';el('storyMode').listeners.change();assert.equal(el('retellingControl').hidden,true);
+ el('generate').listeners.click();assert(el('prompt').textContent.includes('Setting:'));
+ context.location.hash='#game/sentenceStretch';el('sentenceGoal').value='guilty';el('sentenceInput').value='The character walked into the room.';events.hashchange();
+ el('generate').listeners.click();assert(el('prompt').textContent.includes('Make the character seem guilty'));
+ el('project').listeners.click();assert.equal(el('projectionPrompt').textContent,el('prompt').textContent);
  context.location.hash='#game/startEnd';events.hashchange();el('generate').listeners.click();assert.equal(el('teacherReference').hidden,true);
- console.log(JSON.stringify({result:'PASS',dictionaryEntries:dict.length,fullTileSeeds:Object.keys(T.seedClues).length,checks:'complete solver, repeated tiles, alphabet groups, LitCharts links, custom banks, clue/projection/copy/reset flows'}));
+ console.log(JSON.stringify({result:'PASS',dictionaryEntries:dict.length,fullTileSeeds:Object.keys(T.seedClues).length,checks:'complete solver, repeated tiles, alphabet groups, LitCharts links, custom banks, clue/projection/copy/reset flows, retellings, story randomiser, writing goals and control visibility'}));
 })().catch(e=>{console.error(e);process.exitCode=1});

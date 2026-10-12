@@ -41,3 +41,15 @@ and inflections and is not an exhaustive dictionary of English. Teachers can
 accept additional verified words and agree which unfamiliar words count.
 
 Run checks: `node tests/rounds.test.cjs` and `node tests/teacher-support.test.cjs`.
+
+## Story and sentence scaffolds
+
+One-Word Story offers an original story with the existing optional constraint,
+a familiar-story retelling (16 fairy tales, four fables, a random choice or your
+own title), or a random setting, main character and problem.
+
+Sentence Stretch offers optional tone and characterisation goals, a random goal
+or your own goal. Generated sentences for characterisation goals feature a
+character; a teacher-supplied starting sentence is always retained. Extra support
+suggests how to create the effect through language rather than labelling it.
+The goal or story scaffold is included in projection and copied prompts.
