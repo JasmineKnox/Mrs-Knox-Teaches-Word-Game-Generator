@@ -445,9 +445,9 @@ function generateRound() {
     $('targetWord').style.whiteSpace='pre-wrap';
     $('targetWord').style.fontSize=selectedGame.id==='oddOneOut'?'18px':'';
     $('targetWord').style.fontWeight=selectedGame.id==='oddOneOut'?'400':'';
-    $('targetLabel').textContent=selectedGame.id==='oddOneOut'?'Suggested reasoning':currentRound.secret?(selectedGame.id==='mysteryWord'?'Class target':'Teacher answer'):'Teacher example';
-    $('targetHelp').textContent=selectedGame.id==='mysteryWord'?'Turn the guesser away before showing the word. Hide it before they turn back.':selectedGame.id==='oddOneOut'?'One possible explanation, not an exclusive answer key. Hidden until you choose to reveal it.':'Hidden until you choose to reveal it. Copy classroom prompt never includes this answer.';
-    $('toggleTarget').textContent=selectedGame.id==='mysteryWord'?'Show target to class':'Show '+answerLabel();$('toggleTarget').setAttribute('aria-expanded','false');
+    $('targetLabel').textContent=selectedGame.id==='oddOneOut'?'Suggested reasoning':currentRound.secret?(selectedGame.id==='mysteryWord'?'Word to guess (hidden)':'Teacher answer'):'Teacher example';
+    $('targetHelp').textContent=selectedGame.id==='mysteryWord'?'First, ask the guesser to look away or step outside. Click “Reveal word to the clue-givers”, let the class read it, then click “Hide word” before the guesser returns.':selectedGame.id==='oddOneOut'?'One possible explanation, not an exclusive answer key. Hidden until you choose to reveal it.':'Hidden until you choose to reveal it. Copy classroom prompt never includes this answer.';
+    $('toggleTarget').textContent=selectedGame.id==='mysteryWord'?'Reveal word to the clue-givers':'Show '+answerLabel();$('toggleTarget').setAttribute('aria-expanded','false');
     $('roundPanel').hidden=false;$('project').disabled=false;status('Round ready.');
     if($('projection').open)renderProjection();
     return true;
@@ -456,8 +456,9 @@ function generateRound() {
 function toggleAnswer() {
   if(!currentRound || !currentRound.target)return;
   answerVisible=!answerVisible;
+  if(selectedGame.id==='mysteryWord')$('targetLabel').textContent=answerVisible?'Word to guess':'Word to guess (hidden)';
   $('targetWord').hidden=!answerVisible;$('targetWord').textContent=answerVisible?currentRound.target:'';
-  $('toggleTarget').textContent=answerVisible?'Hide '+answerLabel():(selectedGame.id==='mysteryWord'?'Show target to class':'Show '+answerLabel());
+  $('toggleTarget').textContent=answerVisible?(selectedGame.id==='mysteryWord'?'Hide word':'Hide '+answerLabel()):(selectedGame.id==='mysteryWord'?'Reveal word to the clue-givers':'Show '+answerLabel());
   $('toggleTarget').setAttribute('aria-expanded',String(answerVisible));
 }
 async function copyPrompt() {
@@ -482,7 +483,7 @@ function renderProjection() {
   $('projectionAnswer').style.whiteSpace='pre-wrap';
   $('projectionAnswer').style.fontSize=selectedGame.id==='oddOneOut'?'24px':'';
   $('revealProjected').hidden=!currentRound.target;
-  $('revealProjected').textContent=selectedGame.id==='mysteryWord'?'Show target to class':'Show '+answerLabel();
+  $('revealProjected').textContent=selectedGame.id==='mysteryWord'?'Reveal word to the clue-givers':'Show '+answerLabel();
 }
 function openProjection() {
   if(!currentRound)return;
@@ -501,7 +502,7 @@ $('showSupport').addEventListener('click',()=>{const hidden=!$('support').hidden
 $('project').addEventListener('click',openProjection);
 $('closeProjection').addEventListener('click',()=>$('projection').close());
 $('nextProjected').addEventListener('click',()=>{if(!generateRound())$('projection').close();});
-$('revealProjected').addEventListener('click',()=>{if(!currentRound)return;projectedAnswerVisible=!projectedAnswerVisible;$('projectionAnswer').hidden=!projectedAnswerVisible;$('projectionAnswer').textContent=projectedAnswerVisible?currentRound.target:'';$('revealProjected').textContent=(projectedAnswerVisible?'Hide ':'Show ')+answerLabel();});
+$('revealProjected').addEventListener('click',()=>{if(!currentRound)return;projectedAnswerVisible=!projectedAnswerVisible;$('projectionAnswer').hidden=!projectedAnswerVisible;$('projectionAnswer').textContent=projectedAnswerVisible?currentRound.target:'';$('revealProjected').textContent=selectedGame.id==='mysteryWord'?(projectedAnswerVisible?'Hide word':'Reveal word to the clue-givers'):(projectedAnswerVisible?'Hide ':'Show ')+answerLabel();});
 $('surpriseLanding').addEventListener('click',()=>{location.hash='game/'+pick(games).id;});
 window.addEventListener('hashchange',route);
 populateGameOptions();renderCards();route();

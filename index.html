@@ -6,17 +6,17 @@
   <meta name="description" content="Ten low-prep classroom word games. Choose a game and generate a classroom round with Mrs Knox Teaches.">
   <meta name="application-version" content="2026-10-12-word-options">
   <title>Word Game Generator | Mrs Knox Teaches</title>
-  <link rel="stylesheet" href="styles.css?v=20261012-complete-teacher-support">
-  <link rel="stylesheet" href="settings.css?v=20261012-complete-teacher-support">
-  <script defer src="data.js?v=20261012-complete-teacher-support"></script>
-  <script defer src="word-clues.js?v=20261012-complete-teacher-support"></script>
-  <script defer src="odd-one-out.js?v=20261012-complete-teacher-support"></script>
-  <script defer src="letter-dictionary.js?v=20261012-complete-teacher-support"></script>
-  <script defer src="literary-links.js?v=20261012-complete-teacher-support"></script>
-  <script defer src="teacher-word-options.js?v=20261012-complete-teacher-support"></script>
-  <script defer src="teacher-support.js?v=20261012-complete-teacher-support"></script>
-  <script defer src="writing-prompts.js?v=20261012-complete-teacher-support"></script>
-  <script defer src="app.js?v=20261012-complete-teacher-support"></script>
+  <link rel="stylesheet" href="styles.css?v=20261012-clear-guess-word">
+  <link rel="stylesheet" href="settings.css?v=20261012-clear-guess-word">
+  <script defer src="data.js?v=20261012-clear-guess-word"></script>
+  <script defer src="word-clues.js?v=20261012-clear-guess-word"></script>
+  <script defer src="odd-one-out.js?v=20261012-clear-guess-word"></script>
+  <script defer src="letter-dictionary.js?v=20261012-clear-guess-word"></script>
+  <script defer src="literary-links.js?v=20261012-clear-guess-word"></script>
+  <script defer src="teacher-word-options.js?v=20261012-clear-guess-word"></script>
+  <script defer src="teacher-support.js?v=20261012-clear-guess-word"></script>
+  <script defer src="writing-prompts.js?v=20261012-clear-guess-word"></script>
+  <script defer src="app.js?v=20261012-clear-guess-word"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to games</a>
@@ -62,6 +62,11 @@
       <section class="round panel" id="roundPanel" hidden aria-labelledby="roundTitle">
         <div class="round-heading"><h2 id="roundTitle">Classroom prompt</h2><span class="round-meta" id="roundMeta"></span></div>
         <p class="notice" id="roundNotice" hidden></p>
+        <section class="target" id="targetPanel" hidden aria-labelledby="targetLabel">
+          <div><h3 id="targetLabel">Teacher answer</h3><p class="help" id="targetHelp"></p></div>
+          <button class="button secondary" id="toggleTarget" type="button" aria-expanded="false" aria-controls="targetWord">Show answer</button>
+          <p class="target-word" id="targetWord" hidden></p>
+        </section>
         <div id="prompt" class="prompt" tabindex="-1"></div>
         <div class="actions"><button class="button secondary" id="copy" type="button">Copy classroom prompt</button><button class="button secondary" id="showSupport" type="button" aria-expanded="false" aria-controls="support">Show extra support</button></div>
         <div class="support" id="support" hidden></div>
@@ -71,11 +76,6 @@
           <p class="help">Keep this closed while sharing your screen. It is excluded from projection mode and copied classroom prompts.</p>
           <div id="teacherReferenceContent"></div>
         </details>
-        <section class="target" id="targetPanel" hidden aria-labelledby="targetLabel">
-          <div><h3 id="targetLabel">Teacher answer</h3><p class="help" id="targetHelp"></p></div>
-          <button class="button secondary" id="toggleTarget" type="button" aria-expanded="false" aria-controls="targetWord">Show answer</button>
-          <p class="target-word" id="targetWord" hidden></p>
-        </section>
       </section>
     </section>
   </main>

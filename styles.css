@@ -13,3 +13,6 @@ button,select,textarea{font:inherit}button,a,select,textarea{-webkit-tap-highlig
 @media(max-width:720px){.teacher-hints{grid-template-columns:1fr}.teacher-table th,.teacher-table td{padding:9px}.teacher-table th:first-child{width:55px}}
 
 .teacher-option-list{columns:3;column-gap:32px;padding-left:28px;line-height:1.8}.teacher-option-list li{break-inside:avoid;padding-left:4px;overflow-wrap:anywhere}@media(max-width:720px){.teacher-option-list{columns:2}}@media(max-width:420px){.teacher-option-list{columns:1}}
+
+/* Make the answer control easy to locate before a guessing round. */
+.target{background:var(--light);border:1px solid var(--sage);border-radius:6px;padding:16px;margin:0 0 20px}.target .help{font-size:16px}
