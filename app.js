@@ -229,6 +229,7 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
   if(c.category)meta=category;
   switch(gameId) {
     case 'lastLetter':
+      teacher=window.TEACHER_SUPPORT.chainReference(word);
       prompt=`Start with: ${word}\n\nBegin each new word with the final letter of the previous word. No repeats.`;
       detail='The bank supplies a starting word; it does not restrict the whole chain. Take turns in a set order. A student can pass and rejoin. For extra challenge, agree a category or ask for a definition or example.';
       break;
@@ -257,6 +258,7 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
     }
     case 'wordReveal': {
       const clue=clueFor(item),pattern=patternFor(word);target=word;secret=true;
+      teacher={type:'reveal',...window.TEACHER_SUPPORT.wordReference(item,focus)};
       if (difficulty==='easy') prompt=`${pattern}\n\nIdentify the word or term.`;
       if (difficulty==='medium') prompt=`${pattern}\n\n${clue?'Clue: '+clue:'Structure: '+structureHint(word)}\n\nIdentify the term and explain its meaning.`;
       if (difficulty==='hard') prompt=(clue?'Clue: '+clue:pattern)+ '\n\nIdentify the term and explain its meaning.';
@@ -288,6 +290,7 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
         prompt=words.join('  /  ')+'\n\nWhich is the odd one out? Explain your reason.';
         detail='This custom-bank selection is open-ended. No answer or category is inferred from the terms. Check the set before using it; accept accurate alternative reasons.';
         notice='Custom-bank set: check that a meaningful distinction is possible.';
+        teacher={type:'guidance',note:detail,sections:[['Before projecting','Can three items share one accurate feature that the fourth lacks? If not, regenerate or edit the bank.'],['Prompts to ask','What feature connects your three items? Does that feature apply consistently? Can you defend another choice?'],['Teacher check','Do not infer a correct answer from spelling or list order. Ask for a meaningful distinction linked to your unit.']]};
       } else {
         const pool=oddOneOutSets?.[focus]?.[difficulty];
         if(!pool?.length)throw new Error('No authored Odd One Out sets are available for this focus and difficulty. Choose another focus or use a custom bank.');
@@ -299,6 +302,7 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
         if(focus==='analytical')prompt+=' Treat each item as a verb in an analytical sentence. Compare its meaning, not its spelling.';
         target='Suggested choice: '+set.answer+'\n\n'+set.reason+(set.alternative?'\n\nAnother defensible approach: '+set.alternative:'');
         secret=true;
+        teacher={type:'guidance',note:'One possible distinction, not an exclusive answer key.',sections:[['Suggested choice',set.answer],['Reason',set.reason],...(set.alternative?[['Another defensible approach',set.alternative]]:[]),['Teacher check','Ask students to apply the same criterion to all four items and justify alternatives.']]};
         detail='These are authored sets, separate from the general word banks. Reveal Suggested reasoning to see one possible distinction. Accept other answers when the student explains an accurate, consistent criterion.';
         notice='Suggested reasoning is hidden until you choose to reveal it.';
       }
@@ -307,6 +311,7 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
       break;
     }
     case 'mysteryWord':
+      teacher=window.TEACHER_SUPPORT.mysteryReference(item,focus);
       target=word;secret=true;
       prompt='Give one clue per person in a set order. The guesser may guess after each clue.\n\nDo not say, spell or rhyme with the word. Do not repeat a clue.';
       detail='Turn the guesser away before showing the target to the class. Hide it again before the guesser turns back. Start with a broad category, then give precise distinguishing features. The teacher can reject a giveaway clue.\n\nForbidden Word variation: work in pairs and agree extra associated words the clue-giver cannot use.';
@@ -322,6 +327,7 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
       if(goal)prompt=sentence+'\n\nYour goal: '+goal.label+'.\n\n'+prompt.slice(sentence.length+2);
       prompt+=' Keep the sentence grammatical.';
       if(goal){prompt+=' After each change, explain how it helps create the intended effect.';meta+=' / '+goal.label;}
+      teacher=writing.sentenceReference(sentence,goal,difficulty);
       detail='Keep the original sentence visible. Name what changed and why it works. Longer is not automatically better.'+(goal?'\n\n'+goal.tip:'');
       break;
     }
@@ -334,11 +340,14 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
         if(!title)throw new Error('Enter the story title, then generate a round.');
         if(choice!=='custom'&&!retellings.includes(title))throw new Error('Choose a story from the menu.');
         prompt='Retell: '+title+'\n\nTell the familiar story together, one word at a time. Keep its main characters and key events recognisable.\n\n'+routine;
+        const beats=writing.retellingNotes[title];
+        teacher={type:'guidance',note:'Original reminders of common traditional versions, not quotations. Agree the version your class knows; endings and details vary.',sections:beats?[['Beginning',beats[0]],['Problem',beats[1]],['Ending',beats[2]]]:[['Beginning','Ask who the main character is and where the story begins.'],['Problem','Agree the main complication before the round. No summary is stored for this custom title.'],['Ending','Agree how the familiar version ends; do not invent a fixed answer key.']]};
         meta='Retell a well-known story';
         detail='Briefly agree which version your class knows and recall its beginning, problem and ending before starting. You do not need the original wording. Keep the retelling classroom-safe and use a set turn order.';
       } else if(mode==='scaffold') {
         const setting=pick(writing.settings),character=pick(writing.characters),problem=pick(writing.problems);
         prompt='Setting: '+setting+'\nMain character: '+character+'\nProblem: the main character '+problem+'.\n\nBuild a story using all three ideas. Start by introducing the character and setting, then let the problem develop.\n\n'+routine;
+        teacher={type:'guidance',note:'There is no single correct story. Use these prompts to keep the generated ideas connected.',sections:[['Beginning','Introduce '+character+' in '+setting+'.'],['Problem','Keep the complication visible: the main character '+problem+'.'],['Ending','Ask how an action or choice resolves the problem. Pause to repair grammar or continuity.']]};
         meta='Setting + character + problem';
         detail='Read the three starting ideas together. Give students a short thinking pause, then use a set turn order. Keep the scaffold visible and pause if the story loses its connection to the problem. Generate another round for a new combination.';
       } else if(mode==='original') {
@@ -347,6 +356,7 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
         if(constraint!=='none'&&!storyChoices.includes(constraint))throw new Error('Choose a story constraint from the menu.');
         prompt=(constraint==='none'?'Build a coherent classroom-safe story.':'Constraint: '+constraint+'.')+'\n\n'+routine;
         detail='Use a set order. Keep the story classroom-safe. Pause to repair grammar or cohesion, then continue. End the round before it becomes random.';
+        teacher={type:'guidance',note:'Original stories do not have an answer list.',sections:[['Before playing','Agree a character, a place and a manageable problem.'],['If students get stuck','Ask: What happens next? What does the character want? Who or what makes it difficult?'],['Teacher check','Pause for grammar or continuity. Summarise the story so far and invite a sensible next word. Finish with a decision or consequence.']]};
         meta=constraint==='none'?'No added constraint':constraint;
       } else throw new Error('Choose a story option from the menu.');
       break;
@@ -361,8 +371,9 @@ function renderTeacherReference() {
   if(!ref)return;
   const add=(tag,text,parent=content)=>{const el=document.createElement(tag);el.textContent=text;parent.append(el);return el;};
   const link=(text,url,parent)=>{const a=add('a',text,parent);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;};
-  if(ref.type==='alphabet') {
+  if(ref.type==='alphabet'||ref.type==='chain') {
     add('p',ref.note);
+    if(ref.type==='chain')add('h3','First next word starts with '+ref.nextLetter);
     if(['literary devices','language features','persuasive techniques'].includes(currentRound.meta))link('LitCharts: literary devices and terms','https://www.litcharts.com/literary-devices-and-terms',content);
     if(!ref.groups.some(group=>group.terms.length))return;
     const table=add('table','');table.className='teacher-table';
@@ -380,7 +391,22 @@ function renderTeacherReference() {
     add('h3',ref.type==='startEnd'?'20 familiar word options':ref.terms.length+' suggested answers');
     add('p',ref.note);
     if(ref.terms.length){const list=add('ol','');list.className='teacher-option-list';for(const item of ref.terms){const li=add('li','',list);if(item.url)link(item.term+' ↗',item.url,li);else li.textContent=item.term;}}
-  } else {
+  } else if(ref.type==='mystery'||ref.type==='reveal') {
+    add('h3',ref.type==='mystery'?'Teacher clues and forbidden words':'Meaning and example after the reveal');
+    add('p',ref.note);
+    if(ref.type==='mystery') {
+      const list=add('ol','');for(const clue of ref.hints)add('li',clue,list);
+      add('h4','Optional forbidden words');add('p',ref.forbidden.length?ref.forbidden.join(', '):'Choose two or three associated words after checking the target; none are stored.');
+    }
+    if(ref.definition){add('h4','Meaning');add('p',ref.definition);}
+    if(ref.example){add('h4','Example or application');add('p',ref.example);}
+    if(ref.url)link('LitCharts explanation',ref.url,content);
+  } else if(ref.type==='sentence') {
+    add('p',ref.note);ref.models.forEach((model,i)=>{add('h3','Possible revision '+(i+1));add('p',model.text);add('p',model.why);});
+    add('h4','Questions to check the revision');const list=add('ul','');for(const check of ref.checks)add('li',check,list);
+  } else if(ref.type==='guidance') {
+    add('p',ref.note);for(const [heading,text] of ref.sections){add('h3',heading);add('p',text);}
+  } else if(ref.type==='letterBank') {
     add('h3','Clues you can read aloud');
     add('p','Start with the meaning clue. If students need more help, offer the first letter. “Use clue” shows only the clue in the classroom view and projection mode.');
     const hints=add('div','');hints.className='teacher-hints';

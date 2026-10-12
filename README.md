@@ -66,3 +66,18 @@ Start–End draws from 21 authored letter pairs, each with 20 familiar word opti
 chosen for Year 9. These lists are cross-checking aids, not exclusive answer keys
 or a statistical frequency ranking. Both references stay collapsed by default
 and are excluded from copied prompts and projection mode.
+
+## Teacher references for every game
+
+Last-Letter Chain includes suggestions by next starting letter. Mystery Word
+includes broad-to-specific clues, meaning/application and optional forbidden
+words. Word Reveal includes a meaning and example to discuss after revealing.
+Sentence Stretch includes two possible revisions and questions to explain the
+effect. Retellings have original beginning/problem/ending reminders of common
+traditional versions; other story modes have facilitation prompts. Odd One Out
+includes authored reasoning or explicit teacher checks for custom sets.
+
+All references start collapsed and are excluded from copied prompts and
+projection. Only Letter Bank's explicit “Use clue” control sends a teacher clue
+to the classroom view. Definitions and examples for custom terms depend on
+teacher-supplied information; no meaning is fabricated.

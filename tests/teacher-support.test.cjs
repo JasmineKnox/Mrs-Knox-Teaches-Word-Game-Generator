@@ -58,6 +58,18 @@ for(let i=0;i<60;i++){
  const r=W.buildRound('startEnd');assert.equal(r.teacher.terms.length,20);assert(r.teacher.terms.some(x=>x.term===r.target));
  const pair=r.prompt.match(/Starts with ([A-Z])  \/  Ends with ([A-Z])/);assert(r.teacher.terms.every(x=>x.term.startsWith(pair[1].toLowerCase())&&x.term.endsWith(pair[2].toLowerCase())));
 }
+
+for(const [focus,terms] of Object.entries(context.GAME_DATA.banks))for(const term of terms){
+ const item={term,clue:''};const reveal=W.buildRound('wordReveal','easy',focus,[item]);
+ assert(reveal.teacher.definition,`Missing definition: ${term}`);assert(reveal.teacher.example,`Missing example: ${term}`);
+ const mystery=W.buildRound('mysteryWord','easy',focus,[item]);assert(mystery.teacher.hints.length>=1);
+ for(const clue of mystery.teacher.hints)assert(!new RegExp('\\b'+term+'\\b','i').test(clue),`Target leaked in clue: ${term}`);
+}
+for(const goal of writing.goals){const r=W.buildRound('sentenceStretch','medium','general',[],{sentenceGoal:goal.id});assert.equal(r.teacher.models.length,2);assert(r.teacher.models.every(m=>m.text&&m.why));}
+for(const title of [...writing.fairyTales,...writing.fables])assert.equal(W.buildRound('oneWordStory','easy','general',[],{storyMode:'retell',retelling:title}).teacher.sections.length,3);
+for(const term of ['cat','house','zebra']){const r=W.buildRound('lastLetter','easy','custom',[{term}]);assert.equal(r.teacher.nextLetter,term.at(-1).toUpperCase());assert.equal(r.teacher.groups.length,26);}
+assert(W.buildRound('oddOneOut','easy','custom',['a','b','c','d'].map(term=>({term}))).teacher.note.includes('open-ended'));
+
 const descendants=n=>[n,...n.children.flatMap(descendants)];
 (async()=>{
  context.location.hash='#game/letterBank';events.hashchange();el('letterCount').value='9';el('generate').listeners.click();
@@ -84,6 +96,15 @@ const descendants=n=>[n,...n.children.flatMap(descendants)];
  context.location.hash='#game/wordTennis';events.hashchange();el('category').value='animals';el('generate').listeners.click();assert.equal(descendants(el('teacherReferenceContent')).filter(n=>n.tag==='li').length,50);
  await el('copy').listeners.click();assert.equal(copied,el('prompt').textContent);assert(!copied.includes('guinea pig'));
  el('project').listeners.click();assert.equal(el('projectionPrompt').textContent,copied);assert.equal(el('projectionAnswer').hidden,true);
- context.location.hash='#game/sentenceStretch';events.hashchange();el('generate').listeners.click();assert.equal(el('teacherReference').hidden,true);
+ context.location.hash='#game/sentenceStretch';events.hashchange();el('generate').listeners.click();assert.equal(el('teacherReference').hidden,false);
+
+ for(const id of ['lastLetter','mysteryWord','wordReveal','sentenceStretch','oneWordStory','oddOneOut']){
+   context.location.hash='#game/'+id;events.hashchange();el('focus').value='general';el('storyMode').value='retell';el('retelling').value='Cinderella';el('generate').listeners.click();
+   assert.equal(el('teacherReference').hidden,false,id);assert.equal(el('teacherReference').open,false,id);
+   const referenceText=descendants(el('teacherReferenceContent')).map(n=>n.textContent).join(' ');assert(referenceText.length>30,id);
+   await el('copy').listeners.click();assert.equal(copied,el('prompt').textContent);
+   el('project').listeners.click();assert.equal(el('projectionPrompt').textContent,copied);assert.equal(el('projectionAnswer').hidden,true);
+   el('nextProjected').listeners.click();assert.equal(el('teacherReference').open,false);assert.equal(el('projectionAnswer').hidden,true);
+ }
  console.log(JSON.stringify({result:'PASS',dictionaryEntries:dict.length,fullTileSeeds:Object.keys(T.seedClues).length,checks:'complete solver, repeated tiles, alphabet groups, LitCharts links, custom banks, clue/projection/copy/reset flows, retellings, story randomiser, writing goals and control visibility, 50-word tennis lists, 20-word letter-pair lists'}));
 })().catch(e=>{console.error(e);process.exitCode=1});
