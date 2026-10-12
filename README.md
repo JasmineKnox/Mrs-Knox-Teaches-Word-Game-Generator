@@ -53,3 +53,16 @@ or your own goal. Generated sentences for characterisation goals feature a
 character; a teacher-supplied starting sentence is always retained. Extra support
 suggests how to create the effect through language rather than labelling it.
 The goal or story scaffold is included in projection and copied prompts.
+
+## Word Tennis and Start–End teacher options
+
+Word Tennis has 50 authored, familiar suggestions for each broad built-in category.
+Narrow categories (e.g. conjunctions, appeals and sentence types) list their
+valid suggestions without inventing entries to reach 50. Text-specific categories
+retain guidance for the current class text; custom banks show up to 50 supplied
+terms. Relevant literary terms link to LitCharts.
+
+Start–End draws from 21 authored letter pairs, each with 20 familiar word options
+chosen for Year 9. These lists are cross-checking aids, not exclusive answer keys
+or a statistical frequency ranking. Both references stay collapsed by default
+and are excluded from copied prompts and projection mode.

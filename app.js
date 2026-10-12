@@ -34,7 +34,6 @@ const levelOptions={
   odd:{label:'Set complexity',values:[['easy','Easy - clear distinction'],['medium','Medium - closer categories'],['hard','Hard - different defensible readings']]},
   writing:{label:'Change to practise',values:[['easy','Vocabulary and detail'],['medium','Clauses, punctuation and imagery'],['hard','Voice, tone and pace']]}
 };
-const randomWords='garden forest planet window river pencil rabbit kitten silver winter summer basket orange purple school teacher reading learning writing painting rainbow thunder journey blanket candle feather shadow whisper cricket captain picture holiday shelter mountain waterfall triangle question puzzle ticket pocket lantern horizon meadow ocean notebook adventure discovery freedom'.split(' ');
 const writing=window.WRITING_PROMPTS;
 const retellings=[...writing.fairyTales,...writing.fables];
 const storyChoices=[...new Set([...storyConstraints.medium,...storyConstraints.hard])];
@@ -246,12 +245,14 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
       break;
     }
     case 'startEnd': {
-      const candidates=randomWords.filter(w=>(w[0]+w.at(-1))!==previousPair);
-      const answer=pick(candidates.length?candidates:randomWords);
-      const first=answer[0].toUpperCase(),last=answer.at(-1).toUpperCase();
-      previousPair=answer[0]+answer.at(-1);
+      const pairs=window.TEACHER_WORD_OPTIONS.pairs;
+      const key=pick(Object.keys(pairs).filter(pair=>pair!==previousPair));
+      previousPair=key;
+      const answers=pairs[key],answer=pick(answers);
+      const first=key[0].toUpperCase(),last=key[1].toUpperCase();
       prompt=`Starts with ${first}  /  Ends with ${last}\n\nFind a word with those starting and ending letters. Think or jot before sharing.`;
-      target=answer;detail='The pair comes from a real, familiar word, shown under Teacher example. Other answers are welcome. Award the longest correctly spelt word or accept any valid word; agree this before starting.';
+      target=answer;teacher={type:'startEnd',terms:answers.map(term=>({term,url:''})),note:'20 familiar options that match this letter pair, chosen for Year 9. Accept other correctly spelt words too.'};
+      detail='Open Teacher reference for 20 familiar answers. One example is also available under Teacher example. Award the longest correctly spelt word or accept any valid word; agree this before starting.';
       break;
     }
     case 'wordReveal': {
@@ -276,6 +277,7 @@ function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}
       break;
     }
     case 'wordTennis':
+      teacher={type:'tennis',...window.TEACHER_SUPPORT.tennisSuggestions(category,focus==='custom'?items:[])};
       prompt=`Category: ${category}\n\nTeams alternate one answer at a time. No repeats.`;
       detail='Rotate the spokesperson. Use five seconds only for familiar recall; allow longer for explanation. Teams can confer briefly. For extra challenge, require an accurate definition, use or example.';
       break;
@@ -374,6 +376,10 @@ function renderTeacherReference() {
       if(!group.terms.length)add('span','No stored example — skip or invite suggestions.',cell);
       group.terms.forEach((item,i)=>{if(i)add('span','; ',cell);if(item.url)link(item.term+' ↗',item.url,cell);else add('span',item.term,cell);});
     }
+  } else if(ref.type==='tennis'||ref.type==='startEnd') {
+    add('h3',ref.type==='startEnd'?'20 familiar word options':ref.terms.length+' suggested answers');
+    add('p',ref.note);
+    if(ref.terms.length){const list=add('ol','');list.className='teacher-option-list';for(const item of ref.terms){const li=add('li','',list);if(item.url)link(item.term+' ↗',item.url,li);else li.textContent=item.term;}}
   } else {
     add('h3','Clues you can read aloud');
     add('p','Start with the meaning clue. If students need more help, offer the first letter. “Use clue” shows only the clue in the classroom view and projection mode.');

@@ -104,5 +104,12 @@ function makeLetterBank(count,previousSeed){
  const hints=words.filter(w=>clueBank[w]).slice(0,12).map(word=>({word,length:word.length,clue:`There is a ${word.length}-letter word. Think about ${clueBank[word]}.`,initial:word[0].toUpperCase()}));
  return {seed,words,hints};
 }
-window.TEACHER_SUPPORT={alphabetSuggestions,makeLetterBank,matchingWords,canBuild,seedClues,textCategories};
+function tennisSuggestions(category,items=[]){
+ const reference=alphabetSuggestions(category,items);
+ const list=items.length?items.map(x=>x.term):(window.TEACHER_WORD_OPTIONS.tennis[category]||reference.groups.flatMap(g=>g.terms.map(x=>x.term)));
+ const terms=[...new Set(list)].slice(0,50).map(term=>({term,url:window.LITERARY_LINKS[term.toLowerCase()]||''}));
+ const note=items.length?'Examples from your supplied bank. Other accurate answers are welcome unless you agreed to use only this bank.':terms.length>=50?'50 familiar suggestions for this category. Accept other accurate answers; this is not an exclusive answer key.':terms.length?'This is a narrow category, so fewer than 50 distinct suggestions are listed. Accept other accurate answers; do not treat related words as separate techniques or sentence types.':reference.note;
+ return {terms,note};
+}
+window.TEACHER_SUPPORT={alphabetSuggestions,tennisSuggestions,makeLetterBank,matchingWords,canBuild,seedClues,textCategories};
 })();

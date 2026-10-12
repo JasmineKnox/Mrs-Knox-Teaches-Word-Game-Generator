@@ -5,7 +5,7 @@ const el=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)};
 let copied='';
 const context={console,location:{hash:''},navigator:{clipboard:{async writeText(s){copied=s}}},isSecureContext:true,document:{getElementById:el,createElement:node,querySelector:()=>node()},addEventListener(k,fn){events[k]=fn},scrollTo(){}};
 context.window=context;vm.createContext(context);
-for(const file of ['data.js','word-clues.js','odd-one-out.js','letter-dictionary.js','literary-links.js','teacher-support.js','writing-prompts.js','app.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
+for(const file of ['data.js','word-clues.js','odd-one-out.js','letter-dictionary.js','literary-links.js','teacher-word-options.js','teacher-support.js','writing-prompts.js','app.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
 const T=context.TEACHER_SUPPORT,W=context.WordGames;
 assert(T.canBuild('letter','LETTERBANK'));assert(!T.canBuild('letter','LETRBANK'));assert(!T.canBuild('banana','BANAN'));
 const dict=context.LETTER_DICTIONARY;
@@ -44,6 +44,20 @@ for(const goal of writing.goals){
 assert(W.buildRound('sentenceStretch','easy','general',[],{sentence:'The character walked into the room.',sentenceGoal:'guilty'}).prompt.includes('Make the character seem guilty'));
 assert(W.buildRound('sentenceStretch','easy','general',[],{sentenceGoal:'custom',customGoal:'Make the room feel welcoming'}).prompt.includes('Make the room feel welcoming'));
 assert.throws(()=>W.buildRound('sentenceStretch','easy','general',[],{sentenceGoal:'custom'}),/writing goal/);
+const options=context.TEACHER_WORD_OPTIONS;
+for(const [pair,words] of Object.entries(options.pairs)){
+ assert.equal(words.length,20);assert.equal(new Set(words).size,20);assert(words.every(w=>w[0]+w.at(-1)===pair));
+}
+for(const [category,words] of Object.entries(options.tennis)){
+ assert.equal(new Set(words).size,words.length);
+ const ref=T.tennisSuggestions(category);assert.equal(ref.terms.length,words.length);
+ if(!['appeals','high-modality words'].includes(category))assert.equal(words.length,50);
+}
+const customTennis=T.tennisSuggestions('Class topic',[{term:'student choice'},{term:'another example'}]);assert.equal(customTennis.terms.length,2);assert(customTennis.note.includes('supplied bank'));
+for(let i=0;i<60;i++){
+ const r=W.buildRound('startEnd');assert.equal(r.teacher.terms.length,20);assert(r.teacher.terms.some(x=>x.term===r.target));
+ const pair=r.prompt.match(/Starts with ([A-Z])  \/  Ends with ([A-Z])/);assert(r.teacher.terms.every(x=>x.term.startsWith(pair[1].toLowerCase())&&x.term.endsWith(pair[2].toLowerCase())));
+}
 const descendants=n=>[n,...n.children.flatMap(descendants)];
 (async()=>{
  context.location.hash='#game/letterBank';events.hashchange();el('letterCount').value='9';el('generate').listeners.click();
@@ -66,6 +80,10 @@ const descendants=n=>[n,...n.children.flatMap(descendants)];
  context.location.hash='#game/sentenceStretch';el('sentenceGoal').value='guilty';el('sentenceInput').value='The character walked into the room.';events.hashchange();
  el('generate').listeners.click();assert(el('prompt').textContent.includes('Make the character seem guilty'));
  el('project').listeners.click();assert.equal(el('projectionPrompt').textContent,el('prompt').textContent);
- context.location.hash='#game/startEnd';events.hashchange();el('generate').listeners.click();assert.equal(el('teacherReference').hidden,true);
- console.log(JSON.stringify({result:'PASS',dictionaryEntries:dict.length,fullTileSeeds:Object.keys(T.seedClues).length,checks:'complete solver, repeated tiles, alphabet groups, LitCharts links, custom banks, clue/projection/copy/reset flows, retellings, story randomiser, writing goals and control visibility'}));
+ context.location.hash='#game/startEnd';events.hashchange();el('generate').listeners.click();assert.equal(el('teacherReference').hidden,false);assert.equal(el('teacherReference').open,false);assert.equal(descendants(el('teacherReferenceContent')).filter(n=>n.tag==='li').length,20);
+ context.location.hash='#game/wordTennis';events.hashchange();el('category').value='animals';el('generate').listeners.click();assert.equal(descendants(el('teacherReferenceContent')).filter(n=>n.tag==='li').length,50);
+ await el('copy').listeners.click();assert.equal(copied,el('prompt').textContent);assert(!copied.includes('guinea pig'));
+ el('project').listeners.click();assert.equal(el('projectionPrompt').textContent,copied);assert.equal(el('projectionAnswer').hidden,true);
+ context.location.hash='#game/sentenceStretch';events.hashchange();el('generate').listeners.click();assert.equal(el('teacherReference').hidden,true);
+ console.log(JSON.stringify({result:'PASS',dictionaryEntries:dict.length,fullTileSeeds:Object.keys(T.seedClues).length,checks:'complete solver, repeated tiles, alphabet groups, LitCharts links, custom banks, clue/projection/copy/reset flows, retellings, story randomiser, writing goals and control visibility, 50-word tennis lists, 20-word letter-pair lists'}));
 })().catch(e=>{console.error(e);process.exitCode=1});
