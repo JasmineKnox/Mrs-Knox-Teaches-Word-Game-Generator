@@ -190,6 +190,7 @@ function route() {
   $('landing').hidden=Boolean(selectedGame);$('gameView').hidden=!selectedGame;
   clearRound();status('');
   if (selectedGame) {
+    $('gameView').setAttribute('data-accent',['coral','gold','blue','lilac'][games.indexOf(selectedGame)%4]);
     $('gameTitle').textContent=selectedGame.name;
     $('gameDescription').textContent=selectedGame.description;
     setArtwork($('selectedArt'),games.indexOf(selectedGame));
@@ -198,7 +199,7 @@ function route() {
     configureControls();
     document.title=selectedGame.name+' | Mrs Knox Teaches';
     $('gameTitle').focus({preventScroll:true});
-  } else {document.title='Word Game Generator | Mrs Knox Teaches';}
+  } else {$('gameView').setAttribute('data-accent','');document.title='Word Game Generator | Mrs Knox Teaches';}
   window.scrollTo(0,0);
 }
 function buildRound(gameId,difficulty='easy',focus='general',items=[],options={}) {
