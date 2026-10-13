@@ -37,4 +37,5 @@ button,select,textarea{font:inherit}button,a,select,textarea{-webkit-tap-highlig
 #gameView .notice,#gameView .support{background:var(--game-tint);border-left:4px solid var(--game-dark)}
 #gameView .target{background:var(--game-tint);border-color:var(--game-dark)}
 #gameView .target h3,#gameView .status{color:var(--game-dark)}
+#gameView .status.error{color:#8b2222}
 #gameView .target-word{background:var(--game-tint)}
