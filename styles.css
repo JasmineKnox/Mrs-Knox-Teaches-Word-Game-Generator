@@ -16,3 +16,25 @@ button,select,textarea{font:inherit}button,a,select,textarea{-webkit-tap-highlig
 
 /* Make the answer control easy to locate before a guessing round. */
 .target{background:var(--light);border:1px solid var(--sage);border-radius:6px;padding:16px;margin:0 0 20px}.target .help{font-size:16px}
+
+/* Carry each chooser card's supporting colour into its game, setup and round. */
+#gameView[data-accent="coral"]{--game-accent:var(--coral);--game-dark:var(--coral-dark);--game-tint:var(--coral-tint)}
+#gameView[data-accent="gold"]{--game-accent:var(--gold);--game-dark:var(--gold-dark);--game-tint:var(--gold-tint)}
+#gameView[data-accent="blue"]{--game-accent:var(--blue);--game-dark:var(--blue-dark);--game-tint:var(--blue-tint)}
+#gameView[data-accent="lilac"]{--game-accent:var(--lilac);--game-dark:var(--lilac-dark);--game-tint:var(--lilac-tint)}
+#gameView .game-heading .game-art{border:3px solid var(--game-accent)}
+#gameView .game-nav .secondary{color:var(--game-dark);border-color:var(--game-dark)}
+#gameView .rules{background:var(--game-tint);border-color:var(--game-dark);border-left:4px solid var(--game-dark)}
+#gameView .rules summary{color:var(--game-dark)}
+#gameView .setup,#gameView .round{border-color:var(--game-dark)}
+#gameView .setup h2,#gameView label,#gameView .round-heading h2,#gameView .round-meta{color:var(--game-dark)}
+#gameView select,#gameView textarea{border-color:var(--game-dark)}
+#gameView select:focus-visible,#gameView textarea:focus-visible{outline-color:var(--game-dark)}
+#gameView .actions .secondary{color:var(--game-dark);border-color:var(--game-dark)}
+#gameView #generate{color:var(--ink);background:var(--game-accent);border-color:var(--game-dark)}
+#gameView .button:hover:not(:disabled){box-shadow:0 2px 0 var(--game-dark)}
+#gameView .prompt{background:var(--game-tint);border-left-color:var(--game-dark)}
+#gameView .notice,#gameView .support{background:var(--game-tint);border-left:4px solid var(--game-dark)}
+#gameView .target{background:var(--game-tint);border-color:var(--game-dark)}
+#gameView .target h3,#gameView .status{color:var(--game-dark)}
+#gameView .target-word{background:var(--game-tint)}
